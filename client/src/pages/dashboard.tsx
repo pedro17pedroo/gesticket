@@ -3,8 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import MainLayout from "@/components/layout/main-layout";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RecentTickets from "@/components/dashboard/recent-tickets";
 import SlaAlerts from "@/components/dashboard/sla-alerts";
@@ -121,41 +120,33 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="lg:pl-64">
-        <Header 
-          title="Dashboard" 
-          subtitle="Visão geral do sistema de tickets"
-        />
-        
-        <main className="flex-1 p-6">
-          {/* Stats Cards */}
-          <div className="mb-8">
-            <StatsCards stats={stats} isLoading={statsLoading} />
-          </div>
+    <MainLayout 
+      title="Dashboard" 
+      subtitle="Visão geral do sistema de tickets"
+    >
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <StatsCards stats={stats} isLoading={statsLoading} />
+      </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Recent Tickets */}
-            <div className="xl:col-span-2">
-              <RecentTickets />
-            </div>
-            
-            {/* Right Sidebar */}
-            <div className="space-y-6">
-              <SlaAlerts />
-              <TimeTracker />
-              <HourBank />
-            </div>
-          </div>
-          
-          {/* Analytics Charts */}
-          <div className="mt-8">
-            <AnalyticsCharts />
-          </div>
-        </main>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Recent Tickets */}
+        <div className="xl:col-span-2">
+          <RecentTickets />
+        </div>
+        
+        {/* Right Sidebar */}
+        <div className="space-y-6">
+          <SlaAlerts />
+          <TimeTracker />
+          <HourBank />
+        </div>
+      </div>
+      
+      {/* Analytics Charts */}
+      <div className="mt-8">
+        <AnalyticsCharts />
       </div>
 
       {/* Floating Action Button */}
@@ -173,6 +164,6 @@ export default function Dashboard() {
           <PlusIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
         </Button>
       </div>
-    </div>
+    </MainLayout>
   );
 }
