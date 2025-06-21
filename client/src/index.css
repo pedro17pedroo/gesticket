@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  
+  /* GeckoStream specific colors */
+  --primary-50: hsl(207, 100%, 97%);
+  --primary-500: hsl(207, 90%, 54%);
+  --primary-600: hsl(207, 90%, 50%);
+  --primary-700: hsl(207, 90%, 42%);
+  
+  --success-50: hsl(151, 100%, 96%);
+  --success-500: hsl(151, 67%, 43%);
+  --success-600: hsl(151, 67%, 39%);
+  
+  --warning-50: hsl(45, 100%, 96%);
+  --warning-500: hsl(45, 93%, 47%);
+  --warning-600: hsl(45, 93%, 43%);
+  
+  --danger-50: hsl(0, 100%, 97%);
+  --danger-500: hsl(0, 84%, 60%);
+  --danger-600: hsl(0, 84%, 56%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Custom utilities for GeckoStream design */
+@layer utilities {
+  .text-primary-50 { color: hsl(207, 100%, 97%); }
+  .text-primary-500 { color: hsl(207, 90%, 54%); }
+  .text-primary-600 { color: hsl(207, 90%, 50%); }
+  .text-primary-700 { color: hsl(207, 90%, 42%); }
+  
+  .bg-primary-50 { background-color: hsl(207, 100%, 97%); }
+  .bg-primary-500 { background-color: hsl(207, 90%, 54%); }
+  .bg-primary-600 { background-color: hsl(207, 90%, 50%); }
+  .bg-primary-700 { background-color: hsl(207, 90%, 42%); }
+  
+  .text-success-50 { color: hsl(151, 100%, 96%); }
+  .text-success-500 { color: hsl(151, 67%, 43%); }
+  .text-success-600 { color: hsl(151, 67%, 39%); }
+  
+  .bg-success-50 { background-color: hsl(151, 100%, 96%); }
+  .bg-success-500 { background-color: hsl(151, 67%, 43%); }
+  .bg-success-600 { background-color: hsl(151, 67%, 39%); }
+  
+  .text-warning-50 { color: hsl(45, 100%, 96%); }
+  .text-warning-500 { color: hsl(45, 93%, 47%); }
+  .text-warning-600 { color: hsl(45, 93%, 43%); }
+  
+  .bg-warning-50 { background-color: hsl(45, 100%, 96%); }
+  .bg-warning-500 { background-color: hsl(45, 93%, 47%); }
+  .bg-warning-600 { background-color: hsl(45, 93%, 43%); }
+  
+  .text-danger-50 { color: hsl(0, 100%, 97%); }
+  .text-danger-500 { color: hsl(0, 84%, 60%); }
+  .text-danger-600 { color: hsl(0, 84%, 56%); }
+  
+  .bg-danger-50 { background-color: hsl(0, 100%, 97%); }
+  .bg-danger-500 { background-color: hsl(0, 84%, 60%); }
+  .bg-danger-600 { background-color: hsl(0, 84%, 56%); }
+  
+  .border-primary-200 { border-color: hsl(207, 90%, 85%); }
+  .border-success-200 { border-color: hsl(151, 67%, 80%); }
+  .border-warning-200 { border-color: hsl(45, 93%, 80%); }
+  .border-danger-200 { border-color: hsl(0, 84%, 90%); }
+}
+
+/* Hero icons sizing utilities */
+.hero-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.hero-icon-sm {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.hero-icon-lg {
+  width: 2rem;
+  height: 2rem;
+}
