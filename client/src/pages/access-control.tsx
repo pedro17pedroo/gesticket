@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, queryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import MainLayout from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,7 @@ const permissionSchema = z.object({
 
 export default function AccessControl() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
@@ -101,7 +102,7 @@ export default function AccessControl() {
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery<any[]>({
-    queryKey: ['/api/companies/1/users'], // Adjust based on your user fetching logic
+    queryKey: ['/api/users'],
   });
 
   const { data: rolePermissions = [] } = useQuery<Permission[]>({

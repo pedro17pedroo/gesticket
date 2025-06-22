@@ -13,7 +13,8 @@ import {
   Trophy,
   TrendingUpIcon,
   Target,
-  UserCheck
+  UserCheck,
+  Shield
 } from "lucide-react";
 
 const navigation = [
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'Portal Cliente', href: '/client-portal', icon: UserCheck },
   { name: 'Portal Avançado', href: '/enhanced-client-portal', icon: UserCheck },
   { name: 'Gestão Empresas', href: '/company-management', icon: Users },
+  { name: 'Controle de Acesso', href: '/access-control', icon: Shield },
 ];
 
 const integrations = [

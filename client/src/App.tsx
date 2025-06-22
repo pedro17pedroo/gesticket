@@ -24,6 +24,7 @@ import Settings from "@/pages/settings";
 import SLAConfig from "@/pages/sla-config";
 import CompanyManagement from "@/pages/company-management";
 import EnhancedClientPortal from "@/pages/enhanced-client-portal";
+import AccessControl from "@/pages/access-control";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -48,6 +49,7 @@ function Router() {
           <Route path="/sla-config" component={SLAConfig} />
           <Route path="/company-management" component={CompanyManagement} />
           <Route path="/enhanced-client-portal" component={EnhancedClientPortal} />
+          <Route path="/access-control" component={AccessControl} />
         </>
       )}
       <Route component={NotFound} />
