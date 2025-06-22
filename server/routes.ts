@@ -337,6 +337,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Satisfaction rating routes
+  app.post('/api/satisfaction-ratings', async (req, res) => {
+    try {
+      const ratingData = req.body;
+      const rating = await storage.createSatisfactionRating(ratingData);
+      res.status(201).json(rating);
+    } catch (error) {
+      console.error("Error creating satisfaction rating:", error);
+      res.status(400).json({ message: "Failed to create satisfaction rating" });
+    }
+  });
+
+  // Analytics routes
+  app.get('/api/analytics/comprehensive', isAuthenticated, async (req, res) => {
+    try {
+      const { from, to, metric, customer } = req.query;
+      
+      // Mock comprehensive analytics data (replace with real implementation)
+      const analyticsData = {
+        slaPerformance: [
+          { name: "Crítico", target: 95, actual: 88, tickets: 45 },
+          { name: "Alto", target: 90, actual: 94, tickets: 120 },
+          { name: "Médio", target: 85, actual: 92, tickets: 280 },
+          { name: "Baixo", target: 80, actual: 96, tickets: 150 },
+        ],
+        ticketTrends: [
+          { date: "2024-01-01", created: 45, resolved: 42, backlog: 3 },
+          { date: "2024-01-02", created: 52, resolved: 48, backlog: 7 },
+          { date: "2024-01-03", created: 38, resolved: 45, backlog: 0 },
+          { date: "2024-01-04", created: 41, resolved: 39, backlog: 2 },
+          { date: "2024-01-05", created: 48, resolved: 50, backlog: 0 },
+        ],
+        categoryDistribution: [
+          { name: "Suporte", value: 45, color: "#0088FE" },
+          { name: "Incidente", value: 30, color: "#00C49F" },
+          { name: "Otimização", value: 15, color: "#FFBB28" },
+          { name: "Feature", value: 10, color: "#FF8042" },
+        ],
+        agentPerformance: [
+          { name: "João Silva", resolved: 145, avgTime: 2.3, satisfaction: 4.8 },
+          { name: "Maria Santos", resolved: 132, avgTime: 1.9, satisfaction: 4.9 },
+          { name: "Pedro Costa", resolved: 118, avgTime: 2.1, satisfaction: 4.7 },
+          { name: "Ana Oliveira", resolved: 98, avgTime: 2.5, satisfaction: 4.6 },
+        ],
+        customerSatisfaction: [
+          { month: "Jan", score: 4.2, responses: 234 },
+          { month: "Fev", score: 4.3, responses: 198 },
+          { month: "Mar", score: 4.5, responses: 267 },
+          { month: "Abr", score: 4.4, responses: 245 },
+          { month: "Mai", score: 4.6, responses: 289 },
+        ],
+        financialMetrics: {
+          totalRevenue: 125000,
+          totalCosts: 85000,
+          profitMargin: 32,
+          hourlyRates: [
+            { customer: "Cliente A", rate: 120, hours: 85 },
+            { customer: "Cliente B", rate: 95, hours: 120 },
+            { customer: "Cliente C", rate: 150, hours: 65 },
+          ]
+        }
+      };
+
+      res.json(analyticsData);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // Gamification routes
+  app.get('/api/gamification/leaderboard', isAuthenticated, async (req, res) => {
+    try {
+      // Mock leaderboard data
+      const leaderboard = [
+        { userId: "user1", name: "João Silva", points: 1250, badges: 8, level: "Expert", avatar: null },
+        { userId: "user2", name: "Maria Santos", points: 1180, badges: 7, level: "Advanced", avatar: null },
+        { userId: "user3", name: "Pedro Costa", points: 950, badges: 5, level: "Intermediate", avatar: null },
+        { userId: "user4", name: "Ana Oliveira", points: 720, badges: 4, level: "Beginner", avatar: null },
+      ];
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  app.get('/api/gamification/achievements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Mock achievements data
+      const achievements = [
+        { id: 1, name: "Primeiro Ticket", description: "Resolveu seu primeiro ticket", unlocked: true, date: "2024-01-15" },
+        { id: 2, name: "Velocista", description: "Resolveu 10 tickets em um dia", unlocked: true, date: "2024-02-03" },
+        { id: 3, name: "Satisfação 5 Estrelas", description: "Recebeu 5 avaliações consecutivas de 5 estrelas", unlocked: false, progress: 3 },
+        { id: 4, name: "SLA Master", description: "Manteve 95% de compliance SLA por 30 dias", unlocked: false, progress: 22 },
+      ];
+      
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // AI Chatbot simulation routes
+  app.post('/api/ai/chat', async (req, res) => {
+    try {
+      const { message, context } = req.body;
+      
+      // Simulate AI processing delay
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+      
+      // Simple intent recognition and response generation
+      let response = "Entendo sua solicitação. Como posso ajudá-lo melhor?";
+      let suggestions: string[] = [];
+      
+      const lowerMessage = message.toLowerCase();
+      
+      if (lowerMessage.includes("ticket") || lowerMessage.includes("problema")) {
+        response = "Vou ajudá-lo a criar um ticket. Qual é o problema que você está enfrentando?";
+        suggestions = ["Problema de login", "Sistema lento", "Erro na aplicação", "Solicitação de feature"];
+      } else if (lowerMessage.includes("sla") || lowerMessage.includes("prazo")) {
+        response = "Nossos SLAs são: Crítico (1h resposta/4h resolução), Alto (2h/8h), Médio (4h/24h), Baixo (8h/72h). Posso verificar o status de algum ticket específico?";
+        suggestions = ["Verificar ticket específico", "Ver todos meus tickets"];
+      } else if (lowerMessage.includes("status") || lowerMessage.includes("andamento")) {
+        response = "Para verificar o status dos seus tickets, acesse a aba 'Meus Tickets' no portal. Posso também criar um resumo dos tickets em aberto.";
+        suggestions = ["Ver resumo de tickets", "Criar novo ticket"];
+      }
+      
+      res.json({
+        response,
+        suggestions,
+        confidence: 0.85,
+        intent: "general_support"
+      });
+    } catch (error) {
+      console.error("Error processing AI chat:", error);
+      res.status(500).json({ message: "Failed to process chat message" });
+    }
+  });
+
+  // PWA and offline support routes
+  app.get('/manifest.json', (req, res) => {
+    const manifest = {
+      name: "GeckoStream - Sistema de Gestão de Tickets",
+      short_name: "GeckoStream",
+      description: "Plataforma completa para gestão de suporte ao cliente",
+      start_url: "/",
+      display: "standalone",
+      background_color: "#ffffff",
+      theme_color: "#000000",
+      icons: [
+        {
+          src: "/icon-192.png",
+          sizes: "192x192",
+          type: "image/png"
+        },
+        {
+          src: "/icon-512.png", 
+          sizes: "512x512",
+          type: "image/png"
+        }
+      ]
+    };
+    res.json(manifest);
+  });
+
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      features: {
+        tickets: true,
+        sla: true,
+        timeTracking: true,
+        knowledgeBase: true,
+        gamification: true,
+        analytics: true,
+        ai: true,
+        websocket: true
+      }
+    });
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates

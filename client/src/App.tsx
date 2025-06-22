@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { LanguageProvider } from "@/contexts/language-context";
+import { ChatbotProvider } from "@/components/layout/chatbot-provider";
+import FloatingChatButton from "@/components/layout/floating-chat-button";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -13,9 +15,11 @@ import Customers from "@/pages/customers";
 import SLA from "@/pages/sla";
 import TimeTracking from "@/pages/time-tracking";
 import Reports from "@/pages/reports";
+import AdvancedReports from "@/pages/advanced-reports";
 import KnowledgeBase from "@/pages/knowledge-base";
 import Gamification from "@/pages/gamification";
 import NotFound from "@/pages/not-found";
+import ClientPortal from "@/pages/client-portal";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -32,11 +36,14 @@ function Router() {
           <Route path="/sla" component={SLA} />
           <Route path="/time-tracking" component={TimeTracking} />
           <Route path="/reports" component={Reports} />
+          <Route path="/advanced-reports" component={AdvancedReports} />
           <Route path="/knowledge-base" component={KnowledgeBase} />
           <Route path="/gamification" component={Gamification} />
+          <Route path="/client-portal" component={ClientPortal} />
         </>
       )}
       <Route component={NotFound} />
+      {isAuthenticated && <FloatingChatButton />}
     </Switch>
   );
 }
@@ -46,10 +53,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <ChatbotProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ChatbotProvider>
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
