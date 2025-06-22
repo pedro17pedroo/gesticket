@@ -11,6 +11,11 @@ import {
   hourBanks,
   hourBankRequests,
   hourBankUsage,
+  departments,
+  roles,
+  permissions,
+  rolePermissions,
+  userRoles,
   type User,
   type UpsertUser,
   type Company,
@@ -36,6 +41,17 @@ import {
   type SatisfactionRating,
   type InsertSatisfactionRating,
   type SlaConfig,
+  type Department,
+  type InsertDepartment,
+  type Role,
+  type InsertRole,
+  type Permission,
+  type InsertPermission,
+  type RolePermission,
+  type InsertRolePermission,
+  type UserRole,
+  type InsertUserRole,
+  type RoleWithPermissions,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count, sum, avg, gte, lte, or, like } from "drizzle-orm";
@@ -49,6 +65,35 @@ export interface IStorage {
   createUser(userData: UpsertUser): Promise<User>;
   updateUser(id: string, userData: Partial<UpsertUser>): Promise<User>;
   deleteUser(id: string): Promise<void>;
+  
+  // Department operations
+  getDepartments(): Promise<Department[]>;
+  getDepartment(id: number): Promise<Department | undefined>;
+  createDepartment(department: InsertDepartment): Promise<Department>;
+  updateDepartment(id: number, department: Partial<InsertDepartment>): Promise<Department>;
+  deleteDepartment(id: number): Promise<void>;
+  
+  // Role operations
+  getRoles(): Promise<RoleWithPermissions[]>;
+  getRole(id: number): Promise<RoleWithPermissions | undefined>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: number, role: Partial<InsertRole>): Promise<Role>;
+  deleteRole(id: number): Promise<void>;
+  
+  // Permission operations
+  getPermissions(): Promise<Permission[]>;
+  getPermission(id: number): Promise<Permission | undefined>;
+  createPermission(permission: InsertPermission): Promise<Permission>;
+  
+  // Role Permission operations
+  getRolePermissions(roleId: number): Promise<Permission[]>;
+  assignPermissionToRole(rolePermission: InsertRolePermission): Promise<RolePermission>;
+  removePermissionFromRole(roleId: number, permissionId: number): Promise<void>;
+  
+  // User Role operations
+  getUserRoles(userId: string): Promise<(UserRole & { role: Role })[]>;
+  assignRoleToUser(userRole: InsertUserRole): Promise<UserRole>;
+  removeRoleFromUser(userId: string, roleId: number): Promise<void>;
   
   // Company operations
   getCompanies(): Promise<CompanyWithRelations[]>;
@@ -546,6 +591,205 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Hour bank operations
+  // Department operations
+  async getDepartments(): Promise<Department[]> {
+    return await db.select().from(departments).where(eq(departments.isActive, true));
+  }
+
+  async getDepartment(id: number): Promise<Department | undefined> {
+    const [department] = await db.select().from(departments).where(eq(departments.id, id));
+    return department || undefined;
+  }
+
+  async createDepartment(department: InsertDepartment): Promise<Department> {
+    const [newDepartment] = await db.insert(departments).values(department).returning();
+    return newDepartment;
+  }
+
+  async updateDepartment(id: number, department: Partial<InsertDepartment>): Promise<Department> {
+    const [updatedDepartment] = await db
+      .update(departments)
+      .set({ ...department, updatedAt: new Date() })
+      .where(eq(departments.id, id))
+      .returning();
+    return updatedDepartment;
+  }
+
+  async deleteDepartment(id: number): Promise<void> {
+    await db.update(departments)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(departments.id, id));
+  }
+
+  // Role operations
+  async getRoles(): Promise<RoleWithPermissions[]> {
+    const result = await db.select({
+      id: roles.id,
+      name: roles.name,
+      description: roles.description,
+      isSystemRole: roles.isSystemRole,
+      isActive: roles.isActive,
+      createdAt: roles.createdAt,
+      updatedAt: roles.updatedAt,
+      permission: {
+        id: permissions.id,
+        name: permissions.name,
+        resource: permissions.resource,
+        action: permissions.action,
+        description: permissions.description,
+        createdAt: permissions.createdAt,
+      }
+    })
+    .from(roles)
+    .leftJoin(rolePermissions, eq(roles.id, rolePermissions.roleId))
+    .leftJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+    .where(eq(roles.isActive, true));
+
+    // Group by role
+    const rolesMap = new Map<number, RoleWithPermissions>();
+    
+    for (const row of result) {
+      if (!rolesMap.has(row.id)) {
+        rolesMap.set(row.id, {
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          isSystemRole: row.isSystemRole,
+          isActive: row.isActive,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          rolePermissions: []
+        });
+      }
+      
+      if (row.permission && row.permission.id) {
+        rolesMap.get(row.id)!.rolePermissions!.push({
+          id: 0, // rolePermission id not needed here
+          roleId: row.id,
+          permissionId: row.permission.id,
+          createdAt: new Date(),
+          permission: row.permission
+        });
+      }
+    }
+
+    return Array.from(rolesMap.values());
+  }
+
+  async getRole(id: number): Promise<RoleWithPermissions | undefined> {
+    const allRoles = await this.getRoles();
+    return allRoles.find(role => role.id === id);
+  }
+
+  async createRole(role: InsertRole): Promise<Role> {
+    const [newRole] = await db.insert(roles).values(role).returning();
+    return newRole;
+  }
+
+  async updateRole(id: number, role: Partial<InsertRole>): Promise<Role> {
+    const [updatedRole] = await db
+      .update(roles)
+      .set({ ...role, updatedAt: new Date() })
+      .where(eq(roles.id, id))
+      .returning();
+    return updatedRole;
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    await db.update(roles)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(roles.id, id));
+  }
+
+  // Permission operations
+  async getPermissions(): Promise<Permission[]> {
+    return await db.select().from(permissions);
+  }
+
+  async getPermission(id: number): Promise<Permission | undefined> {
+    const [permission] = await db.select().from(permissions).where(eq(permissions.id, id));
+    return permission || undefined;
+  }
+
+  async createPermission(permission: InsertPermission): Promise<Permission> {
+    const [newPermission] = await db.insert(permissions).values(permission).returning();
+    return newPermission;
+  }
+
+  // Role Permission operations
+  async getRolePermissions(roleId: number): Promise<Permission[]> {
+    const result = await db.select({
+      id: permissions.id,
+      name: permissions.name,
+      resource: permissions.resource,
+      action: permissions.action,
+      description: permissions.description,
+      createdAt: permissions.createdAt,
+    })
+    .from(rolePermissions)
+    .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+    .where(eq(rolePermissions.roleId, roleId));
+
+    return result;
+  }
+
+  async assignPermissionToRole(rolePermission: InsertRolePermission): Promise<RolePermission> {
+    const [newRolePermission] = await db.insert(rolePermissions).values(rolePermission).returning();
+    return newRolePermission;
+  }
+
+  async removePermissionFromRole(roleId: number, permissionId: number): Promise<void> {
+    await db.delete(rolePermissions)
+      .where(and(
+        eq(rolePermissions.roleId, roleId),
+        eq(rolePermissions.permissionId, permissionId)
+      ));
+  }
+
+  // User Role operations
+  async getUserRoles(userId: string): Promise<(UserRole & { role: Role })[]> {
+    const result = await db.select({
+      id: userRoles.id,
+      userId: userRoles.userId,
+      roleId: userRoles.roleId,
+      assignedBy: userRoles.assignedBy,
+      assignedAt: userRoles.assignedAt,
+      expiresAt: userRoles.expiresAt,
+      isActive: userRoles.isActive,
+      role: {
+        id: roles.id,
+        name: roles.name,
+        description: roles.description,
+        isSystemRole: roles.isSystemRole,
+        isActive: roles.isActive,
+        createdAt: roles.createdAt,
+        updatedAt: roles.updatedAt,
+      }
+    })
+    .from(userRoles)
+    .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(and(
+      eq(userRoles.userId, userId),
+      eq(userRoles.isActive, true)
+    ));
+
+    return result;
+  }
+
+  async assignRoleToUser(userRole: InsertUserRole): Promise<UserRole> {
+    const [newUserRole] = await db.insert(userRoles).values(userRole).returning();
+    return newUserRole;
+  }
+
+  async removeRoleFromUser(userId: string, roleId: number): Promise<void> {
+    await db.update(userRoles)
+      .set({ isActive: false })
+      .where(and(
+        eq(userRoles.userId, userId),
+        eq(userRoles.roleId, roleId)
+      ));
+  }
+
   async getHourBankStatus(customerId: number): Promise<{
     limit: number;
     used: number;

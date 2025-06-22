@@ -10,6 +10,7 @@ import {
   boolean,
   decimal,
   pgEnum,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -22,6 +23,56 @@ export const ticketStatusEnum = pgEnum("ticket_status", ["open", "in_progress", 
 export const ticketTypeEnum = pgEnum("ticket_type", ["support", "incident", "optimization", "feature_request"]);
 
 // Session storage table (mandatory for Replit Auth)
+// New access control system tables
+export const departments = pgTable("departments", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  isSystemRole: boolean("is_system_role").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const permissions = pgTable("permissions", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  resource: varchar("resource", { length: 50 }).notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const rolePermissions = pgTable("role_permissions", {
+  id: serial("id").primaryKey(),
+  roleId: integer("role_id").notNull().references(() => roles.id, { onDelete: "cascade" }),
+  permissionId: integer("permission_id").notNull().references(() => permissions.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  uniqueRolePermission: unique("unique_role_permission").on(table.roleId, table.permissionId),
+}));
+
+export const userRoles = pgTable("user_roles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  roleId: integer("role_id").notNull().references(() => roles.id, { onDelete: "cascade" }),
+  assignedBy: varchar("assigned_by", { length: 255 }).notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").default(true).notNull(),
+}, (table) => ({
+  uniqueUserRole: unique("unique_user_role").on(table.userId, table.roleId),
+}));
+
 export const sessions = pgTable(
   "sessions",
   {
@@ -59,6 +110,7 @@ export const users = pgTable("users", {
   role: userRoleEnum("role").default("client_user"),
   companyId: integer("company_id").references(() => companies.id),
   managerId: varchar("manager_id").references(() => users.id),
+  departmentId: integer("department_id").references(() => departments.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -419,6 +471,34 @@ export const insertSatisfactionRatingSchema = createInsertSchema(satisfactionRat
   updatedAt: true,
 });
 
+// New schemas for access control
+export const insertDepartmentSchema = createInsertSchema(departments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRoleSchema = createInsertSchema(roles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
+  id: true,
+  assignedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -443,6 +523,18 @@ export type SatisfactionRating = typeof satisfactionRatings.$inferSelect;
 export type InsertSatisfactionRating = z.infer<typeof insertSatisfactionRatingSchema>;
 export type SlaConfig = typeof slaConfigs.$inferSelect;
 
+// New types for access control
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+export type Role = typeof roles.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Permission = typeof permissions.$inferSelect;
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type UserRole = typeof userRoles.$inferSelect;
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+
 // Complex types with relations
 export type TicketWithRelations = Ticket & {
   customer?: Customer;
@@ -465,5 +557,15 @@ export type CompanyWithRelations = Company & {
 export type UserWithRelations = User & {
   company?: Company;
   manager?: User;
+  department?: Department;
   managedUsers?: User[];
+  userRoles?: (UserRole & { role: Role })[];
+};
+
+export type RoleWithPermissions = Role & {
+  rolePermissions?: (RolePermission & { permission: Permission })[];
+};
+
+export type DepartmentWithUsers = Department & {
+  users?: User[];
 };
