@@ -110,6 +110,13 @@ GeckoStream is a comprehensive ticket management system built with a modern full
 - Connection pooling for production scalability
 
 ## Changelog
+- June 22, 2025: Fixed responsive design issues across core pages
+  - Refactored Tickets, SLA, Time Tracking, Reports, and Knowledge Base pages
+  - Migrated all pages to use MainLayout for consistent responsive behavior
+  - Improved mobile navigation with overflow handling for tabs
+  - Enhanced grid layouts with proper breakpoints (sm/md/lg/xl)
+  - Added dark mode support to all newly updated components
+  - Fixed layout structure issues that were causing broken responsiveness
 - June 22, 2025: Implemented robust access control system
   - Added comprehensive role-based access control (RBAC)
   - Created system roles: Administrador, Agente, Gestor-Cliente, Técnico-Cliente, Supervisor

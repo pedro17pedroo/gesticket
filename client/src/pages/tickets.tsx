@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import MainLayout from "@/components/layout/main-layout";
 import TicketCard from "@/components/tickets/ticket-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,20 +33,15 @@ export default function Tickets() {
   const resolvedTickets = filteredTickets.filter(t => t.status === 'resolved');
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="lg:pl-64">
-        <Header 
-          title="Tickets" 
-          subtitle="Gerencie todos os tickets de suporte"
-        />
-        
-        <main className="flex-1 p-6">
-          {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
+    <MainLayout 
+      title="Tickets" 
+      subtitle="Gerencie todos os tickets de suporte"
+    >
+      <div className="space-y-6">
+        {/* Filtros */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 relative">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Buscar tickets..."
@@ -89,27 +83,29 @@ export default function Tickets() {
                 Novo Ticket
               </Button>
             </div>
-          </div>
+        </div>
 
-          {/* Tickets Tabs */}
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all">
+        {/* Abas de Tickets */}
+        <Tabs defaultValue="all" className="w-full">
+          <div className="overflow-x-auto">
+            <TabsList className="grid grid-cols-5 w-full min-w-max">
+              <TabsTrigger value="all" className="text-xs md:text-sm whitespace-nowrap">
                 Todos ({filteredTickets.length})
               </TabsTrigger>
-              <TabsTrigger value="open">
+              <TabsTrigger value="open" className="text-xs md:text-sm whitespace-nowrap">
                 Abertos ({openTickets.length})
               </TabsTrigger>
-              <TabsTrigger value="in_progress">
+              <TabsTrigger value="in_progress" className="text-xs md:text-sm whitespace-nowrap">
                 Em Andamento ({inProgressTickets.length})
               </TabsTrigger>
-              <TabsTrigger value="waiting">
+              <TabsTrigger value="waiting" className="text-xs md:text-sm whitespace-nowrap">
                 Aguardando ({waitingTickets.length})
               </TabsTrigger>
-              <TabsTrigger value="resolved">
+              <TabsTrigger value="resolved" className="text-xs md:text-sm whitespace-nowrap">
                 Resolvidos ({resolvedTickets.length})
               </TabsTrigger>
             </TabsList>
+          </div>
             
             <TabsContent value="all" className="mt-6">
               <TicketsList tickets={filteredTickets} isLoading={isLoading} />
@@ -131,9 +127,8 @@ export default function Tickets() {
               <TicketsList tickets={resolvedTickets} isLoading={isLoading} />
             </TabsContent>
           </Tabs>
-        </main>
       </div>
-    </div>
+    </MainLayout>
   );
 }
 

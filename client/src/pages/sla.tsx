@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -123,22 +122,18 @@ export default function SLA() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:pl-64">
-        <Header 
-          title="SLAs" 
-          subtitle="Configuração e monitoramento de acordos de nível de serviço"
-        />
-        
-        <main className="flex-1 p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-              <TabsTrigger value="metrics">Métricas</TabsTrigger>
-              <TabsTrigger value="configs">Configurações</TabsTrigger>
+    <MainLayout
+      title="SLAs" 
+      subtitle="Monitore acordos de nível de serviço"
+    >
+      <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-2 min-w-max">
+              <TabsTrigger value="overview" className="whitespace-nowrap">Visão Geral</TabsTrigger>
+              <TabsTrigger value="configs" className="whitespace-nowrap">Configurações</TabsTrigger>
             </TabsList>
+          </div>
 
             <TabsContent value="overview" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -241,24 +236,24 @@ export default function SLA() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            </TabsContent>
+            </div>
+          </TabsContent>
 
-            <TabsContent value="configs" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg font-semibold">Configurações de SLA</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Gerencie os acordos de nível de serviço por tipo de cliente
-                  </p>
-                </div>
-                <Button>
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Nova Configuração
-                </Button>
+          <TabsContent value="configs" className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="text-lg font-semibold">Configurações de SLA</h3>
+                <p className="text-sm text-muted-foreground">
+                  Gerencie os acordos de nível de serviço por tipo de cliente
+                </p>
               </div>
+              <Button className="w-full sm:w-auto">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Nova Configuração
+              </Button>
+            </div>
 
-              <div className="grid gap-4">
+            <div className="grid gap-4">
                 {slaConfigs.map((config) => (
                   <Card key={config.id}>
                     <CardHeader>
@@ -273,7 +268,7 @@ export default function SLA() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                         <div>
                           <div className="font-medium text-muted-foreground">Prioridade</div>
                           <div className="mt-1 capitalize">{config.priority}</div>
@@ -296,8 +291,7 @@ export default function SLA() {
               </div>
             </TabsContent>
           </Tabs>
-        </main>
       </div>
-    </div>
+    </MainLayout>
   );
 }

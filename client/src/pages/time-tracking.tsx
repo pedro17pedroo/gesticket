@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -238,23 +237,19 @@ export default function TimeTracking() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:pl-64">
-        <Header 
-          title="Controle de Tempo" 
-          subtitle="Monitore e gerencie o tempo gasto em tickets"
-        />
-        
-        <main className="flex-1 p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="timer">Timer</TabsTrigger>
-              <TabsTrigger value="entries">Registros</TabsTrigger>
-              <TabsTrigger value="hour-banks">Banco de Horas</TabsTrigger>
-              <TabsTrigger value="reports">Relatórios</TabsTrigger>
+    <MainLayout
+      title="Controle de Tempo" 
+      subtitle="Gerencie tempo gasto em tickets e projetos"
+    >
+      <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-3 min-w-max">
+              <TabsTrigger value="timer" className="whitespace-nowrap">Timer</TabsTrigger>
+              <TabsTrigger value="entries" className="whitespace-nowrap">Entradas</TabsTrigger>
+              <TabsTrigger value="banks" className="whitespace-nowrap">Banco de Horas</TabsTrigger>
             </TabsList>
+          </div>
 
             <TabsContent value="timer" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -513,8 +508,7 @@ export default function TimeTracking() {
               </Card>
             </TabsContent>
           </Tabs>
-        </main>
       </div>
-    </div>
+    </MainLayout>
   );
 }
