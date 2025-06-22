@@ -52,17 +52,17 @@ export default function TimeTracker() {
   };
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <CardHeader className="p-6 border-b border-gray-200">
-        <CardTitle className="text-lg font-semibold text-gray-900">
+    <Card className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <CardHeader className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
           Rastreamento de Tempo
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         {/* Active Timer */}
-        <div className="bg-primary-50 rounded-lg p-4 mb-4 border border-primary-200">
+        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 mb-4 border border-primary-200 dark:border-primary-800">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-primary-900">Timer Ativo</span>
+            <span className="text-sm font-medium text-primary-900 dark:text-primary-300">Timer Ativo</span>
             <Button
               variant="ghost"
               size="sm"
@@ -76,29 +76,29 @@ export default function TimeTracker() {
               )}
             </Button>
           </div>
-          <p className="text-2xl font-bold text-primary-900 font-mono">
+          <p className="text-2xl font-bold text-primary-900 dark:text-primary-300 font-mono">
             {formatTime(getCurrentElapsed())}
           </p>
-          <p className="text-xs text-primary-700">#{activeTimer.ticketId}</p>
+          <p className="text-xs text-primary-700 dark:text-primary-400">#{activeTimer.ticketId}</p>
         </div>
         
         {/* Today's Time Stats */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Tempo Hoje</span>
-            <span className="text-sm font-mono font-medium text-gray-900">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Tempo Hoje</span>
+            <span className="text-sm font-mono font-medium text-gray-900 dark:text-white">
               {mockTimeStats.today}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Tempo Semana</span>
-            <span className="text-sm font-mono font-medium text-gray-900">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Tempo Semana</span>
+            <span className="text-sm font-mono font-medium text-gray-900 dark:text-white">
               {mockTimeStats.week}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Meta Semanal</span>
-            <span className="text-sm font-mono font-medium text-success-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Meta Semanal</span>
+            <span className="text-sm font-mono font-medium text-success-600 dark:text-success-400">
               {mockTimeStats.weeklyGoal}
             </span>
           </div>

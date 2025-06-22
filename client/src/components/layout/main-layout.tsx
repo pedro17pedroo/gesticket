@@ -15,7 +15,7 @@ export default function MainLayout({ children, title, subtitle }: MainLayoutProp
     <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className="flex flex-col w-64">
+        <div className="flex flex-col w-64 fixed h-full">
           <Sidebar />
         </div>
       </div>
@@ -36,7 +36,7 @@ export default function MainLayout({ children, title, subtitle }: MainLayoutProp
       )}
 
       {/* Main content */}
-      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 lg:ml-64 overflow-hidden">
         <Header 
           title={title} 
           subtitle={subtitle}

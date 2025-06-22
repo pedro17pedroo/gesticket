@@ -19,17 +19,17 @@ export default function SlaAlerts() {
   ];
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <CardHeader className="p-6 border-b border-gray-200">
-        <CardTitle className="text-lg font-semibold text-gray-900">
+    <Card className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <CardHeader className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
           Alertas SLA
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         {alerts.length === 0 ? (
           <div className="text-center py-4">
-            <ClockIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Nenhum alerta de SLA</p>
+            <ClockIcon className="w-8 h-8 text-gray-400 dark:text-gray-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum alerta de SLA</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -38,8 +38,8 @@ export default function SlaAlerts() {
                 key={alert.id}
                 className={`flex items-center space-x-3 p-3 rounded-lg border ${
                   alert.severity === 'critical'
-                    ? 'bg-danger-50 border-danger-200'
-                    : 'bg-warning-50 border-warning-200'
+                    ? 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800'
+                    : 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800'
                 }`}
               >
                 <div className="flex-shrink-0">

@@ -145,6 +145,7 @@ export const tickets = pgTable("tickets", {
   createdById: varchar("created_by_id").references(() => users.id),
   clientResponsibleId: varchar("client_responsible_id").references(() => users.id), // Client-side responsible user
   dueDate: timestamp("due_date"),
+  firstResponseAt: timestamp("first_response_at"),
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

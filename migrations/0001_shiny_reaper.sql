@@ -1,0 +1,1 @@
+ALTER TABLE "tickets" ADD COLUMN "first_response_at" timestamp;

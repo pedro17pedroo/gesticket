@@ -47,18 +47,18 @@ export default function HourBank() {
   const getTextColor = (status: string) => {
     switch (status) {
       case 'critical':
-        return 'text-danger-600';
+        return 'text-danger-600 dark:text-danger-400';
       case 'warning':
-        return 'text-warning-600';
+        return 'text-warning-600 dark:text-warning-400';
       default:
-        return 'text-gray-500';
+        return 'text-gray-500 dark:text-gray-400';
     }
   };
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <CardHeader className="p-6 border-b border-gray-200">
-        <CardTitle className="text-lg font-semibold text-gray-900">
+    <Card className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <CardHeader className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
           Bolsa de Horas
         </CardTitle>
       </CardHeader>
@@ -67,17 +67,17 @@ export default function HourBank() {
           {hourBanks.map((bank) => (
             <div key={bank.id} className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {bank.client}
                 </span>
                 <span className={`text-sm ${
-                  bank.status === 'critical' ? 'text-danger-600' : 'text-gray-500'
+                  bank.status === 'critical' ? 'text-danger-600 dark:text-danger-400' : 'text-gray-500 dark:text-gray-400'
                 }`}>
                   {bank.used}/{bank.limit}h
                 </span>
               </div>
               
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(bank.status)}`}
                   style={{ width: `${Math.min(bank.percentage, 100)}%` }}

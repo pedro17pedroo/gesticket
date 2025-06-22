@@ -80,16 +80,16 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
         const Icon = stat.icon;
         
         return (
-          <Card key={index} className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <Card key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                   <p className={`text-sm mt-1 ${
                     stat.changeType === 'positive' 
-                      ? 'text-success-600' 
-                      : 'text-danger-600'
+                      ? 'text-success-600 dark:text-success-400' 
+                      : 'text-danger-600 dark:text-danger-400'
                   }`}>
                     <span className="font-medium">{stat.change}</span> desde ontem
                   </p>

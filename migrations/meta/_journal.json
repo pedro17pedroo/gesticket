@@ -8,6 +8,13 @@
       "when": 1750620140520,
       "tag": "0000_sour_power_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1750620811922,
+      "tag": "0001_shiny_reaper",
+      "breakpoints": true
     }
   ]
 }
