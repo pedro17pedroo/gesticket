@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import MainLayout from "@/components/layout/main-layout";
 import TicketCard from "@/components/tickets/ticket-card";
-import TicketForm from "@/components/tickets/ticket-form";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,10 +12,10 @@ import { PlusIcon, SearchIcon, FilterIcon } from "lucide-react";
 import { TicketWithRelations } from "@shared/schema";
 
 export default function Tickets() {
+  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [showTicketForm, setShowTicketForm] = useState(false);
 
   // Fetch tickets
   const { data: tickets = [], isLoading } = useQuery<TicketWithRelations[]>({
@@ -80,7 +81,7 @@ export default function Tickets() {
                 </SelectContent>
               </Select>
               
-              <Button onClick={() => setShowTicketForm(true)}>
+              <Button onClick={() => setLocation('/tickets/new')}>
                 <PlusIcon className="w-4 h-4 mr-2" />
                 Novo Ticket
               </Button>
@@ -131,11 +132,7 @@ export default function Tickets() {
           </Tabs>
       </div>
       
-      {/* Ticket Form Modal */}
-      <TicketForm 
-        open={showTicketForm} 
-        onOpenChange={setShowTicketForm}
-      />
+
     </MainLayout>
   );
 }

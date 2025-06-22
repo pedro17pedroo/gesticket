@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Tickets from "@/pages/tickets";
+import TicketFormPage from "@/pages/ticket-form-page";
 import Customers from "@/pages/customers";
 import SLA from "@/pages/sla";
 import TimeTracking from "@/pages/time-tracking";
@@ -37,6 +38,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/tickets" component={Tickets} />
+          <Route path="/tickets/new" component={TicketFormPage} />
           <Route path="/customers" component={Customers} />
           <Route path="/sla" component={SLA} />
           <Route path="/time-tracking" component={TimeTracking} />
