@@ -8,12 +8,19 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
+// For development, skip Replit Auth if environment variables are not available
+const isDevelopment = process.env.NODE_ENV === 'development';
+const hasReplitConfig = process.env.REPLIT_DOMAINS && process.env.REPL_ID;
+
+if (!hasReplitConfig && !isDevelopment) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
 const getOidcConfig = memoize(
   async () => {
+    if (!hasReplitConfig) {
+      return null; // Skip OIDC in development
+    }
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
       process.env.REPL_ID!
@@ -57,13 +64,21 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
+  try {
+    await storage.upsertUser({
+      id: claims["sub"],
+      email: claims["email"],
+      firstName: claims["first_name"],
+      lastName: claims["last_name"],
+      profileImageUrl: claims["profile_image_url"],
+    });
+  } catch (error) {
+    console.error("Error upserting user:", error);
+    // Don't throw in development mode
+    if (hasReplitConfig) {
+      throw error;
+    }
+  }
 }
 
 export async function setupAuth(app: Express) {
@@ -72,7 +87,53 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  passport.serializeUser((user: any, cb) => cb(null, user));
+  passport.deserializeUser((user: any, cb) => cb(null, user));
+
+  // Development mode - skip Replit Auth setup
+  if (!hasReplitConfig) {
+    console.log("Development mode: Skipping Replit Auth setup");
+    
+    // Mock authentication for development
+    app.get("/api/login", (req, res) => {
+      // Create a mock user session for development
+      req.login({
+        claims: {
+          sub: "dev-user-123",
+          email: "dev@example.com",
+          first_name: "Developer",
+          last_name: "User",
+          profile_image_url: null,
+        },
+        access_token: "dev-token",
+        refresh_token: "dev-refresh",
+        expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+      }, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.redirect("/");
+      });
+    });
+
+    app.get("/api/callback", (req, res) => {
+      res.redirect("/");
+    });
+
+    app.get("/api/logout", (req, res) => {
+      req.logout(() => {
+        res.redirect("/");
+      });
+    });
+
+    return;
+  }
+
   const config = await getOidcConfig();
+  if (!config) {
+    throw new Error("Failed to get OIDC configuration");
+  }
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -84,8 +145,7 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
@@ -130,6 +190,24 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
+  // Development mode - always allow access with mock user
+  if (!hasReplitConfig) {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    // Ensure we have a mock user with required fields
+    if (!user.claims) {
+      user.claims = {
+        sub: "dev-user-123",
+        email: "dev@example.com",
+        first_name: "Developer", 
+        last_name: "User",
+        role: "admin", // Give admin role in development
+      };
+    }
+    return next();
+  }
+
   if (!req.isAuthenticated() || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -147,6 +225,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   try {
     const config = await getOidcConfig();
+    if (!config) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
     return next();
