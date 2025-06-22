@@ -20,6 +20,8 @@ import KnowledgeBase from "@/pages/knowledge-base";
 import Gamification from "@/pages/gamification";
 import NotFound from "@/pages/not-found";
 import ClientPortal from "@/pages/client-portal";
+import Settings from "@/pages/settings";
+import SLAConfig from "@/pages/sla-config";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -40,6 +42,8 @@ function Router() {
           <Route path="/knowledge-base" component={KnowledgeBase} />
           <Route path="/gamification" component={Gamification} />
           <Route path="/client-portal" component={ClientPortal} />
+          <Route path="/settings" component={Settings} />
+          <Route path="/sla-config" component={SLAConfig} />
         </>
       )}
       <Route component={NotFound} />

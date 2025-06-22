@@ -480,6 +480,188 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Settings routes
+  app.get('/api/settings', isAuthenticated, async (req, res) => {
+    try {
+      // Mock settings data (replace with real implementation)
+      const settings = {
+        general: {
+          companyName: "GeckoStream",
+          supportEmail: "suporte@geckostream.com",
+          timezone: "America/Sao_Paulo",
+          language: "pt-BR",
+          dateFormat: "DD/MM/YYYY",
+          businessHours: {
+            start: "08:00",
+            end: "18:00",
+            workdays: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+          }
+        },
+        notifications: {
+          emailNotifications: true,
+          smsNotifications: false,
+          slackIntegration: true,
+          ticketCreated: true,
+          ticketAssigned: true,
+          slaBreached: true,
+          customerReplied: true
+        },
+        security: {
+          twoFactorAuth: false,
+          sessionTimeout: 480,
+          maxLoginAttempts: 5,
+          passwordPolicy: {
+            minLength: 8,
+            requireUppercase: true,
+            requireNumbers: true,
+            requireSpecialChars: true
+          }
+        }
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.post('/api/settings', isAuthenticated, async (req, res) => {
+    try {
+      const { section, data } = req.body;
+      // Mock save settings (replace with real implementation)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      res.json({ success: true, section, data });
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      res.status(500).json({ message: "Failed to save settings" });
+    }
+  });
+
+  // Webhooks routes
+  app.get('/api/webhooks', isAuthenticated, async (req, res) => {
+    try {
+      // Mock webhooks data
+      const webhooks = [
+        {
+          id: 1,
+          name: "Slack Notifications",
+          url: "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+          events: ["ticket.created", "ticket.assigned", "sla.breached"],
+          active: true,
+          lastTriggered: "2024-01-20T15:30:00Z"
+        },
+        {
+          id: 2,
+          name: "External CRM",
+          url: "https://api.crm.example.com/webhooks/tickets",
+          events: ["ticket.created", "ticket.resolved"],
+          active: true,
+          lastTriggered: "2024-01-20T14:45:00Z"
+        }
+      ];
+      res.json(webhooks);
+    } catch (error) {
+      console.error("Error fetching webhooks:", error);
+      res.status(500).json({ message: "Failed to fetch webhooks" });
+    }
+  });
+
+  app.post('/api/webhooks', isAuthenticated, async (req, res) => {
+    try {
+      const webhookData = req.body;
+      // Mock webhook creation
+      const newWebhook = { id: Date.now(), ...webhookData };
+      res.status(201).json(newWebhook);
+    } catch (error) {
+      console.error("Error creating webhook:", error);
+      res.status(500).json({ message: "Failed to create webhook" });
+    }
+  });
+
+  // SLA Rules routes
+  app.get('/api/sla-rules', isAuthenticated, async (req, res) => {
+    try {
+      // Mock SLA rules data
+      const slaRules = [
+        {
+          id: 1,
+          name: "Clientes Premium - Crítico",
+          priority: "critical",
+          customerTier: "premium",
+          responseTime: 15,
+          resolutionTime: 60,
+          active: true,
+          businessHoursOnly: false,
+          escalationRules: {
+            enabled: true,
+            levels: [
+              { level: 1, timeMinutes: 30, assignTo: "manager" },
+              { level: 2, timeMinutes: 60, assignTo: "director" }
+            ]
+          }
+        },
+        {
+          id: 2,
+          name: "Clientes Standard - Alto",
+          priority: "high",
+          customerTier: "standard",
+          responseTime: 120,
+          resolutionTime: 480,
+          active: true,
+          businessHoursOnly: true,
+          escalationRules: {
+            enabled: false,
+            levels: []
+          }
+        }
+      ];
+      res.json(slaRules);
+    } catch (error) {
+      console.error("Error fetching SLA rules:", error);
+      res.status(500).json({ message: "Failed to fetch SLA rules" });
+    }
+  });
+
+  app.post('/api/sla-rules', isAuthenticated, async (req, res) => {
+    try {
+      const ruleData = req.body;
+      // Mock rule creation
+      const newRule = { id: Date.now(), ...ruleData };
+      res.status(201).json(newRule);
+    } catch (error) {
+      console.error("Error creating SLA rule:", error);
+      res.status(500).json({ message: "Failed to create SLA rule" });
+    }
+  });
+
+  app.get('/api/sla-global-settings', isAuthenticated, async (req, res) => {
+    try {
+      // Mock global SLA settings
+      const settings = {
+        businessHours: {
+          start: "09:00",
+          end: "18:00",
+          timezone: "America/Sao_Paulo",
+          workdays: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        },
+        notifications: {
+          warningThreshold: 80,
+          escalationEnabled: true,
+          slackNotifications: true,
+          emailNotifications: true
+        },
+        metrics: {
+          targetCompliance: 95,
+          reportingPeriod: "monthly"
+        }
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching SLA global settings:", error);
+      res.status(500).json({ message: "Failed to fetch SLA global settings" });
+    }
+  });
+
   // PWA and offline support routes
   app.get('/manifest.json', (req, res) => {
     const manifest = {

@@ -10,7 +10,10 @@ import {
   LinkIcon,
   SettingsIcon,
   Users,
-  Trophy
+  Trophy,
+  TrendingUpIcon,
+  Target,
+  UserCheck
 } from "lucide-react";
 
 const navigation = [
@@ -21,12 +24,15 @@ const navigation = [
   { name: 'Tempo', href: '/time-tracking', icon: CheckCircleIcon },
   { name: 'Gamificação', href: '/gamification', icon: Trophy },
   { name: 'Relatórios', href: '/reports', icon: BarChart3Icon },
+  { name: 'Relatórios Avançados', href: '/advanced-reports', icon: TrendingUpIcon },
   { name: 'Base Conhecimento', href: '/knowledge-base', icon: BookOpenIcon },
+  { name: 'Portal Cliente', href: '/client-portal', icon: UserCheck },
 ];
 
 const integrations = [
-  { name: 'APIs & Webhooks', href: '/integrations', icon: LinkIcon },
+  { name: 'APIs & Webhooks', href: '/settings', icon: LinkIcon },
   { name: 'Configurações', href: '/settings', icon: SettingsIcon },
+  { name: 'Config. SLA', href: '/sla-config', icon: Target },
 ];
 
 export default function Sidebar() {
