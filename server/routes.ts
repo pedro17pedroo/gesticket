@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTicketSchema, insertCustomerSchema, insertTimeEntrySchema, insertTicketCommentSchema } from "@shared/schema";
+import { insertTicketSchema, insertCustomerSchema, insertTimeEntrySchema, insertTicketCommentSchema, insertKnowledgeArticleSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<void> {
   // Note: Auth is already set up in setupApp, so we don't need to set it up again
@@ -320,6 +320,46 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error) {
       console.error("Error fetching knowledge article:", error);
       res.status(500).json({ message: "Failed to fetch knowledge article" });
+    }
+  });
+
+  app.post('/api/knowledge-articles', isAuthenticated, async (req: any, res) => {
+    try {
+      const authorId = req.user.claims.sub;
+      const articleData = insertKnowledgeArticleSchema.parse({
+        ...req.body,
+        authorId,
+      });
+      
+      const article = await storage.createKnowledgeArticle(articleData);
+      res.status(201).json(article);
+    } catch (error) {
+      console.error("Error creating knowledge article:", error);
+      res.status(400).json({ message: "Failed to create knowledge article" });
+    }
+  });
+
+  app.patch('/api/knowledge-articles/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const articleData = req.body;
+      
+      const article = await storage.updateKnowledgeArticle(id, articleData);
+      res.json(article);
+    } catch (error) {
+      console.error("Error updating knowledge article:", error);
+      res.status(400).json({ message: "Failed to update knowledge article" });
+    }
+  });
+
+  app.delete('/api/knowledge-articles/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteKnowledgeArticle(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting knowledge article:", error);
+      res.status(500).json({ message: "Failed to delete knowledge article" });
     }
   });
 

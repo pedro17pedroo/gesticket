@@ -478,26 +478,65 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions));
     }
 
-    return await query.orderBy(desc(knowledgeArticles.createdAt));
+    const results = await query.orderBy(desc(knowledgeArticles.createdAt));
+    
+    // Transform tags from JSON string to array
+    return results.map(article => ({
+      ...article,
+      tags: article.tags ? JSON.parse(article.tags) : []
+    }));
   }
 
   async getKnowledgeArticle(id: number): Promise<KnowledgeArticle | undefined> {
     const [article] = await db.select().from(knowledgeArticles).where(eq(knowledgeArticles.id, id));
-    return article;
+    if (!article) return undefined;
+    
+    // Transform tags from JSON string to array
+    return {
+      ...article,
+      tags: article.tags ? JSON.parse(article.tags) : []
+    };
   }
 
   async createKnowledgeArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle> {
-    const [newArticle] = await db.insert(knowledgeArticles).values(article).returning();
-    return newArticle;
+    // Transform tags array to JSON string for database storage
+    const articleWithTags = {
+      ...article,
+      tags: Array.isArray(article.tags) ? JSON.stringify(article.tags) : article.tags
+    };
+    
+    const [newArticle] = await db.insert(knowledgeArticles).values(articleWithTags).returning();
+    
+    // Transform tags back to array for response
+    return {
+      ...newArticle,
+      tags: newArticle.tags ? JSON.parse(newArticle.tags) : []
+    };
   }
 
   async updateKnowledgeArticle(id: number, article: Partial<InsertKnowledgeArticle>): Promise<KnowledgeArticle> {
+    // Transform tags array to JSON string for database storage
+    const articleWithTags = {
+      ...article,
+      ...(article.tags && { tags: Array.isArray(article.tags) ? JSON.stringify(article.tags) : article.tags }),
+      updatedAt: new Date()
+    };
+    
     const [updatedArticle] = await db
       .update(knowledgeArticles)
-      .set({ ...article, updatedAt: new Date() })
+      .set(articleWithTags)
       .where(eq(knowledgeArticles.id, id))
       .returning();
-    return updatedArticle;
+    
+    // Transform tags back to array for response
+    return {
+      ...updatedArticle,
+      tags: updatedArticle.tags ? JSON.parse(updatedArticle.tags) : []
+    };
+  }
+
+  async deleteKnowledgeArticle(id: number): Promise<void> {
+    await db.delete(knowledgeArticles).where(eq(knowledgeArticles.id, id));
   }
 
   // Comment operations
