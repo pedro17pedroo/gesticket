@@ -212,10 +212,16 @@ export default function TicketForm({ open, onOpenChange, ticket }: TicketFormPro
   });
 
   const onSubmit = (data: InsertTicket) => {
+    // Convert "unassigned" back to null for database storage
+    const processedData = {
+      ...data,
+      assigneeId: data.assigneeId === "unassigned" ? null : data.assigneeId,
+    };
+    
     if (ticket) {
-      updateTicketMutation.mutate(data);
+      updateTicketMutation.mutate(processedData);
     } else {
-      createTicketMutation.mutate(data);
+      createTicketMutation.mutate(processedData);
     }
   };
 
@@ -353,14 +359,14 @@ export default function TicketForm({ open, onOpenChange, ticket }: TicketFormPro
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsável</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "unassigned"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Atribuir a..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Não atribuído</SelectItem>
+                        <SelectItem value="unassigned">Não atribuído</SelectItem>
                         {users.filter(user => user.role === 'agent' || user.role === 'manager').map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.firstName} {user.lastName}
