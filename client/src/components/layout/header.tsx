@@ -45,7 +45,7 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between h-16 px-6">
         <div className="flex items-center space-x-4">
           <Button 

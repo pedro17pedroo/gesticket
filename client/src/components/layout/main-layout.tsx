@@ -43,7 +43,7 @@ export default function MainLayout({ children, title, subtitle }: MainLayoutProp
           onMenuClick={() => setSidebarOpen(true)}
         />
         
-        <main className="flex-1 relative overflow-y-auto focus:outline-none bg-white dark:bg-gray-900">
+        <main className="flex-1 relative overflow-y-auto focus:outline-none bg-white dark:bg-gray-900 pt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {children}

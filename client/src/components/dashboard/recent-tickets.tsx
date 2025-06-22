@@ -15,13 +15,13 @@ export default function RecentTickets() {
   });
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <CardHeader className="p-6 border-b border-gray-200">
+    <Card className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <CardHeader className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900">
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
             Tickets Recentes
           </CardTitle>
-          <Button variant="ghost" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+          <Button variant="ghost" className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
             Ver todos
           </Button>
         </div>
@@ -45,7 +45,7 @@ export default function RecentTickets() {
             ))}
           </div>
         ) : tickets.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
             Nenhum ticket encontrado
           </div>
         ) : (
@@ -53,25 +53,25 @@ export default function RecentTickets() {
             {tickets.map((ticket, index) => (
               <div 
                 key={ticket.id} 
-                className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
-                  index < tickets.length - 1 ? 'border-b border-gray-100' : ''
+                className={`p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${
+                  index < tickets.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-sm font-mono text-gray-500">
+                      <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
                         #TKT-{ticket.id.toString().padStart(4, '0')}
                       </span>
                       <PriorityBadge priority={ticket.priority} />
                       <StatusBadge status={ticket.status} />
                     </div>
                     
-                    <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1 line-clamp-2">
                       {ticket.title}
                     </h3>
                     
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                       Cliente: {ticket.customer?.name || 'N/A'} • Criado {
                         formatDistanceToNow(new Date(ticket.createdAt), { 
                           addSuffix: true,
@@ -80,7 +80,7 @@ export default function RecentTickets() {
                       }
                     </p>
                     
-                    <div className="flex items-center text-xs text-gray-500">
+                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                       <span>
                         {ticket.assignee 
                           ? `Atribuído para: ${ticket.assignee.firstName} ${ticket.assignee.lastName}` 
@@ -88,7 +88,7 @@ export default function RecentTickets() {
                         }
                       </span>
                       <span className="mx-2">•</span>
-                      <span className="text-success-600">SLA: Dentro do prazo</span>
+                      <span className="text-success-600 dark:text-success-400">SLA: Dentro do prazo</span>
                     </div>
                   </div>
                   
