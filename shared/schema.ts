@@ -45,8 +45,10 @@ export const customers = pgTable("customers", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   slaLevel: varchar("sla_level").default("bronze"), // bronze, silver, gold
+  status: varchar("status").default("active"), // active, inactive
   hourBankLimit: integer("hour_bank_limit").default(0),
   hourBankUsed: integer("hour_bank_used").default(0),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).default("0"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -215,6 +217,9 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  hourlyRate: z.number().default(0),
+  status: z.string().default("active"),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({

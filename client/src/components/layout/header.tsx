@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import LanguageSelector from "@/components/common/language-selector";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -25,17 +26,22 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
   const [search, setSearch] = useState("");
 
   const getUserDisplayName = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName} ${user.lastName}`;
+    if (user && typeof user === 'object' && 'name' in user) {
+      return user.name as string;
     }
-    return user?.email || "User";
+    return "User";
   };
 
   const getUserInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    if (user && typeof user === 'object' && 'name' in user) {
+      const name = user.name as string;
+      const parts = name.split(' ');
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+      return name[0]?.toUpperCase() || "U";
     }
-    return user?.email?.[0]?.toUpperCase() || "U";
+    return "U";
   };
 
   return (
@@ -73,6 +79,9 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
             />
           </div>
           
+          {/* Language Selector */}
+          <LanguageSelector />
+          
           {/* Theme Toggle */}
           <ThemeToggle />
           
@@ -91,7 +100,7 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-3 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.profileImageUrl || ""} alt="User avatar" />
+                  <AvatarImage src="" alt="User avatar" />
                   <AvatarFallback>{getUserInitials()}</AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
@@ -99,7 +108,7 @@ export default function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                     {getUserDisplayName()}
                   </div>
                   <div className="text-xs text-gray-500 capitalize">
-                    {user?.role?.replace('_', ' ') || "User"}
+                    {"User"}
                   </div>
                 </div>
               </Button>

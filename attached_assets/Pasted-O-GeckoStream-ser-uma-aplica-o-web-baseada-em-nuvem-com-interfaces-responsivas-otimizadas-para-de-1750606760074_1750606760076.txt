@@ -1,0 +1,162 @@
+O GeckoStream será uma aplicação web baseada em nuvem, com interfaces responsivas otimizadas para desktops e dispositivos móveis, suportando criação de tickets omnicanal, gestão de SLAs, rastreamento de tempo, alocação de custos e análises avançadas. A solução integrará sistemas internos (ex.: ERP, CRM) e ferramentas externas (ex.: Slack, Jira) via APIs, garantindo escalabilidade, segurança e conformidade com LGPD e GDPR. Este PRD prioriza tecnologias web, utilizando Vite para o front-end, e suporta Progressive Web App (PWA) para acesso offline, eliminando a dependência de aplicativos móveis nativos.
+1.3 Público-Alvo
+Usuários Finais: Clientes da empresa que abrem tickets via portal web para suporte, otimização ou resolução de problemas.
+Agentes: Equipe de suporte que gerencia tickets e registra tempo pelo navegador.
+Gerentes: Supervisores que monitoram desempenho, SLAs e métricas financeiras em dashboards web.
+Administradores: Equipe de TI que configura o sistema e gerencia integrações via interface web.
+2. Visão do Produto
+O GeckoStream transforma o suporte ao cliente em uma experiência web fluida e estratégica, oferecendo uma plataforma de gestão de tickets personalizável, aprimorada por IA e com transparência financeira. Acessível em qualquer navegador, ele promove satisfação do cliente, eficiência operacional e lucratividade, com uma interface moderna, rápida e responsiva.
+3. Metas e Objetivos
+3.2 Objetivos do Produto
+Entregar uma aplicação web altamente personalizável, adaptada aos fluxos de suporte da empresa.
+Implementar IA para priorização de tickets, sugestões de resolução e análises preditivas, acessíveis via interface web.
+Suportar criação de tickets omnicanal (web, e-mail, chat, WhatsApp) com integração direta no navegador.
+Oferecer funcionalidades nativas de SLA, rastreamento de tempo e gestão de custos em um único portal web.
+Garantir compatibilidade com navegadores modernos (Chrome, Firefox, Safari, Edge) e suporte a PWA para uso offline.
+4. Funcionalidades e Requisitos
+4.1 Funcionalidades Principais
+4.1.1 Gestão de Tickets
+Omnichannel Web: Criação de tickets via portal web, e-mail, chat embutido (WebSocket) ou WhatsApp (via integração API).
+Tipos de Tickets: Suporte, incidente, otimização, solicitação de funcionalidade ou categorias personalizadas.
+Rastreamento de Status: Status configuráveis (ex.: Aberto, Em Andamento, Resolvido, Fechado) exibidos em tempo real.
+Roteamento Inteligente: Atribuição por IA baseada em expertise, carga de trabalho e histórico, com notificações push no navegador.
+Mesclagem/Divisão: Combinar ou dividir tickets diretamente na interface Kanban ou tabela.
+Prioridades: Baixa, Média, Alta, Crítica, com escalonamento dinâmico via alertas visuais.
+4.1.2 Gestão de SLA
+SLAs Personalizados: Configuração por cliente, tipo de ticket ou prioridade (ex.: resposta em 1h, resolução em 4h) via painel de administração web.
+Monitoramento em Tempo Real: Indicadores visuais (ex.: cronômetros) e alertas para violações de SLA.
+Níveis de SLA: Suporte a tiers (Ouro, Prata, Bronze) vinculados a contratos, configuráveis online.
+Relatórios de SLA: Gráficos interativos e tabelas exportáveis (PDF/Excel) no dashboard.
+4.1.3 Rastreamento de Tempo e Bolsa de Horas
+Temporizador Web: Timer integrado na interface para registrar tempo por ticket, com opção manual.
+Bolsa de Horas: Bancos de horas por cliente (ex.: 100 horas/mês) com gráficos de consumo em tempo real.
+Alertas de Limite: Notificações push no navegador em 50%, 80% e 100% do uso da bolsa.
+Cobrança de Excedentes: Cálculo automático de horas extras com taxas configuráveis, exibido no portal do cliente.
+Auditoria de Tempo: Logs acessíveis em uma seção de histórico no painel web.
+4.1.4 Gestão de Custos
+Alocação de Custos: Taxas horárias por agente ou tipo de ticket configuradas via interface web.
+Lucratividade: Análise de receita vs. custo por cliente ou ticket, com gráficos interativos.
+Previsão de Orçamento: Projeções baseadas em tendências, exibidas em dashboards.
+Painéis Financeiros: Visualizações de custos, excedentes e lucratividade com filtros dinâmicos.
+4.1.5 Automação com IA
+Categorização: IA (via API de NLP) classifica tickets por tipo/urgência no momento da criação.
+Sugestões de Resolução: Pop-ups com soluções da base de conhecimento ou tickets anteriores.
+Alertas Preditivos de SLA: Notificações baseadas em padrões históricos, exibidas no painel.
+Chatbot Web: Widget de chat com IA para criar tickets ou responder perguntas básicas.
+Análise de Sentimento: Detecção de frustração em mensagens, com destaque visual para priorização.
+4.1.6 Base de Conhecimento e Autoatendimento
+Base de Conhecimento: Artigos e FAQs indexados, acessíveis via busca no portal web.
+Sugestões por IA: Recomendações automáticas durante a criação de tickets, reduzindo volume.
+Portal do Cliente: Interface web para visualizar tickets, bolsa de horas e base de conhecimento.
+Versionamento: Controle de edições de artigos com aprovação via painel de administração.
+4.1.7 Relatórios e Análises
+Dashboards Interativos: Métricas de tickets, SLAs, tempo e custos com gráficos (Chart.js).
+Relatórios Personalizados: Filtros por cliente, agente ou período, exportáveis via web.
+Análises Preditivas: Previsão de tendências de tickets e recursos, exibida em painéis.
+CSAT: Enquetes pós-resolução integradas na interface, com resultados em dashboards.
+4.1.8 Integrações
+Integrações Nativas: Jira, Slack, HubSpot, Salesforce, Omie, Zapier, Twilio, via APIs.
+APIs RESTful/GraphQL: Para integrações personalizadas, documentadas em um portal de desenvolvedor.
+Webhooks: Acionamento de ações externas com base em eventos de tickets.
+SSO: Suporte a Okta, Google e Microsoft Azure AD, configurável no navegador.
+4.1.9 Experiência do Usuário
+Interface Kanban: Visualização de tickets com drag-and-drop, otimizada para web.
+PWA: Suporte offline e instalação como aplicativo web em desktops/móveis.
+Multilíngue: Português, inglês, espanhol, com troca de idioma na interface.
+Acessibilidade: Conformidade com WCAG 2.1 para navegação inclusiva.
+Temas Personalizados: Configuração de cores e logotipos via painel de administração.
+4.1.10 Gamificação
+Incentivos para Agentes: Pontos, emblemas e rankings exibidos em um leaderboard web.
+Feedback do Cliente: Avaliações pós-resolução com estrelas e comentários.
+Desafios de Equipe: Metas mensais com progresso visualizado no dashboard.
+4.2 Requisitos Não Funcionais
+4.2.1 Desempenho
+Suportar 10.000 usuários simultâneos com tempo de resposta de API <1s.
+Carregamento de páginas <2s em conexões padrão (4G/Wi-Fi), otimizado pelo Vite.
+Processar 100.000 tickets/dia sem degradação.
+4.2.2 Segurança
+Criptografia AES-256 para dados em trânsito e repouso.
+RBAC com permissões granulares, gerenciadas via interface web.
+Conformidade com LGPD, GDPR e ISO 27001.
+Proteção contra XSS, CSRF e injeção SQL, com validação no AdonisJS 6.
+4.2.3 Escalabilidade
+Escalamento horizontal com Kubernetes na AWS.
+Arquitetura multitenant para isolamento de dados.
+Cache com Redis para otimizar consultas web.
+4.2.4 Confiabilidade
+Backups a cada 6 horas com retenção de 30 dias.
+RTO <15 minutos para recuperação de desastres.
+Monitoramento com Prometheus/Grafana, integrado ao dashboard de administração.
+5. Arquitetura Técnica
+5.1 Tecnologias
+Front-End: React.js com TypeScript, Vite para construção rápida e HMR (Hot Module Replacement), Tailwind CSS para estilização, Redux Toolkit para gerenciamento de estado.
+Back-End: Node.js com AdonisJS 6 para APIs RESTful e GraphQL, utilizando o ORM Lucid para PostgreSQL, WebSockets para notificações em tempo real e middlewares para autenticação (JWT/SSO).
+Banco de Dados: PostgreSQL (dados relacionais), MongoDB (logs), Redis (cache/filas).
+IA/ML: TensorFlow para NLP e predições, hospedado na AWS SageMaker.
+Infraestrutura: AWS (EKS, RDS, ElastiCache, S3), Terraform para IaC.
+CI/CD: GitHub Actions para testes e deployments.
+Monitoramento: New Relic (desempenho), CloudWatch (logs), PagerDuty (alertas).
+5.2 Benefícios do Vite
+Build Rápido: Compilação extremamente rápida com esbuild, reduzindo tempos de desenvolvimento e deployment.
+Hot Module Replacement (HMR): Atualizações instantâneas no navegador durante o desenvolvimento, melhorando a produtividade.
+PWA Suporte: Integração com plugins como vite-plugin-pwa para suporte offline e instalação como aplicativo.
+Flexibilidade: Suporta React com TypeScript, Tailwind CSS e bibliotecas de gráficos (ex.: Chart.js) sem configuração complexa.
+5.3 Benefícios do AdonisJS 6
+ORM Lucid: Consultas seguras e eficientes ao PostgreSQL, com suporte a migrations.
+WebSockets: Notificações em tempo real para atualizações de tickets e alertas de SLA.
+Roteamento/Middlewares: Autenticação robusta e validação de requisições.
+Produtividade: CLI para scaffolding rápido de modelos, controladores e rotas.
+Escalabilidade: Compatível com microsserviços e Kubernetes.
+5.4 Diagrama de Arquitetura
+Camada Cliente: Aplicação web (PWA) com React/Vite, acessada via navegador.
+Gateway de API: AWS API Gateway para roteamento e throttling.
+Camada de Aplicação: Microsserviços em AdonisJS 6 (tickets, SLAs, tempo, análises).
+Camada de Dados: PostgreSQL (tickets/SLAs), MongoDB (logs), Redis (cache).
+Camada IA: SageMaker para NLP e predições.
+Camada Integração: Webhooks/APIs para ferramentas externas.
+6. Métricas de Sucesso
+Métricas do Cliente:
+CSAT >90%.
+Taxa de Resolução no Primeiro Contato (FCR) >75%.
+Tempo médio de resolução <4 horas.
+Métricas Operacionais:
+Conformidade com SLA >95%.
+Produtividade dos agentes +20%.
+Disponibilidade do sistema >99,9%.
+Métricas Financeiras:
+Custo por ticket reduzido em 25%.
+ROI em 18 meses.
+Cobrança precisa de excedentes para 100% dos clientes.
+7. Plano de Implementação
+7.1 Fases
+Fase 1: Descoberta e Design 
+Workshops para definir fluxos e SLAs.
+Criar wireframes e protótipos com Figma.
+Definir contratos de API com AdonisJS 6.
+Fase 2: Desenvolvimento do Núcleo 
+Implementar gestão de tickets, SLAs e rastreamento de tempo com AdonisJS 6/Vite.
+Desenvolver base de conhecimento e portal do cliente.
+Configurar infraestrutura AWS e CI/CD com Vite para builds rápidos.
+Fase 3: Funcionalidades Avançadas 
+Adicionar automação IA e análises preditivas.
+Integrar com Jira, Slack, etc., via APIs/Webhooks.
+Otimizar PWA e gamificação com Vite plugins.
+Fase 4: Testes e Treinamento 
+Testes unitários, integração e carga (AdonisJS 6 e Vite suportam testes nativos).
+Conduzir UAT com agentes e clientes.
+Treinar equipe e preparar documentação.
+Fase 5: Lançamento e Suporte 
+Deploy em produção com rollout gradual.
+Monitoramento por 30 dias pós-lançamento.
+Coletar feedback para melhorias.
+
+
+8. Riscos e Mitigações
+Risco: Expansão de escopo.
+Mitigação: Fixar funcionalidades na Fase 1, usar sprints ágeis.
+Risco: Atrasos em integrações.
+Mitigação: Mapear APIs cedo, reservar buffer na Fase 3.
+Risco: Resistência dos agentes.
+Mitigação: Envolver agentes no UAT, oferecer gamificação.
+Risco: Inacurácias de IA.
+Mitigação: Validar modelos com dados reais.

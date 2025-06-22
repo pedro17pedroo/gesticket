@@ -8,14 +8,18 @@ import {
   BarChart3Icon,
   BookOpenIcon,
   LinkIcon,
-  SettingsIcon
+  SettingsIcon,
+  Users,
+  Trophy
 } from "lucide-react";
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboardIcon },
   { name: 'Tickets', href: '/tickets', icon: TicketIcon, badge: '12' },
+  { name: 'Clientes', href: '/customers', icon: Users },
   { name: 'SLAs', href: '/sla', icon: ClockIcon },
   { name: 'Tempo', href: '/time-tracking', icon: CheckCircleIcon },
+  { name: 'Gamificação', href: '/gamification', icon: Trophy },
   { name: 'Relatórios', href: '/reports', icon: BarChart3Icon },
   { name: 'Base Conhecimento', href: '/knowledge-base', icon: BookOpenIcon },
 ];
