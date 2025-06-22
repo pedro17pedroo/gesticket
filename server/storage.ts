@@ -6,6 +6,7 @@ import {
   timeEntries,
   knowledgeArticles,
   ticketComments,
+  ticketAttachments,
   satisfactionRatings,
   slaConfigs,
   hourBanks,
@@ -38,6 +39,8 @@ import {
   type InsertKnowledgeArticle,
   type TicketComment,
   type InsertTicketComment,
+  type TicketAttachment,
+  type InsertTicketAttachment,
   type SatisfactionRating,
   type InsertSatisfactionRating,
   type SlaConfig,
@@ -147,6 +150,11 @@ export interface IStorage {
   // Comment operations
   getTicketComments(ticketId: number): Promise<TicketComment[]>;
   createTicketComment(comment: InsertTicketComment): Promise<TicketComment>;
+  
+  // Attachment operations
+  getTicketAttachments(ticketId: number): Promise<TicketAttachment[]>;
+  createTicketAttachment(attachment: InsertTicketAttachment): Promise<TicketAttachment>;
+  deleteTicketAttachment(id: number): Promise<void>;
   
   // Satisfaction rating operations
   createSatisfactionRating(rating: InsertSatisfactionRating): Promise<SatisfactionRating>;
@@ -551,6 +559,24 @@ export class DatabaseStorage implements IStorage {
   async createTicketComment(comment: InsertTicketComment): Promise<TicketComment> {
     const [newComment] = await db.insert(ticketComments).values(comment).returning();
     return newComment;
+  }
+
+  // Attachment operations
+  async getTicketAttachments(ticketId: number): Promise<TicketAttachment[]> {
+    return await db
+      .select()
+      .from(ticketAttachments)
+      .where(eq(ticketAttachments.ticketId, ticketId))
+      .orderBy(desc(ticketAttachments.createdAt));
+  }
+
+  async createTicketAttachment(attachment: InsertTicketAttachment): Promise<TicketAttachment> {
+    const [newAttachment] = await db.insert(ticketAttachments).values(attachment).returning();
+    return newAttachment;
+  }
+
+  async deleteTicketAttachment(id: number): Promise<void> {
+    await db.delete(ticketAttachments).where(eq(ticketAttachments.id, id));
   }
 
   // Satisfaction rating operations

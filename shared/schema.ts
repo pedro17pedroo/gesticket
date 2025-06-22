@@ -192,6 +192,20 @@ export const knowledgeArticles = pgTable("knowledge_articles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Ticket attachments
+export const ticketAttachments = pgTable("ticket_attachments", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").references(() => tickets.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  fileSize: integer("file_size").notNull(), // in bytes
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Ticket comments
 export const ticketComments = pgTable("ticket_comments", {
   id: serial("id").primaryKey(),
@@ -331,6 +345,7 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   }),
   timeEntries: many(timeEntries),
   comments: many(ticketComments),
+  attachments: many(ticketAttachments),
   satisfactionRatings: many(satisfactionRatings),
   hourBankUsage: many(hourBankUsage),
 }));
@@ -349,6 +364,17 @@ export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
 export const knowledgeArticlesRelations = relations(knowledgeArticles, ({ one }) => ({
   author: one(users, {
     fields: [knowledgeArticles.authorId],
+    references: [users.id],
+  }),
+}));
+
+export const ticketAttachmentsRelations = relations(ticketAttachments, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [ticketAttachments.ticketId],
+    references: [tickets.id],
+  }),
+  user: one(users, {
+    fields: [ticketAttachments.userId],
     references: [users.id],
   }),
 }));
@@ -460,6 +486,11 @@ export const insertKnowledgeArticleSchema = createInsertSchema(knowledgeArticles
   updatedAt: true,
 });
 
+export const insertTicketAttachmentSchema = createInsertSchema(ticketAttachments).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertTicketCommentSchema = createInsertSchema(ticketComments).omit({
   id: true,
   createdAt: true,
@@ -518,6 +549,8 @@ export type TimeEntry = typeof timeEntries.$inferSelect;
 export type InsertTimeEntry = z.infer<typeof insertTimeEntrySchema>;
 export type KnowledgeArticle = typeof knowledgeArticles.$inferSelect;
 export type InsertKnowledgeArticle = z.infer<typeof insertKnowledgeArticleSchema>;
+export type TicketAttachment = typeof ticketAttachments.$inferSelect;
+export type InsertTicketAttachment = z.infer<typeof insertTicketAttachmentSchema>;
 export type TicketComment = typeof ticketComments.$inferSelect;
 export type InsertTicketComment = z.infer<typeof insertTicketCommentSchema>;
 export type SatisfactionRating = typeof satisfactionRatings.$inferSelect;
@@ -545,6 +578,7 @@ export type TicketWithRelations = Ticket & {
   clientResponsible?: User;
   timeEntries?: TimeEntry[];
   comments?: TicketComment[];
+  attachments?: TicketAttachment[];
 };
 
 export type CompanyWithRelations = Company & {

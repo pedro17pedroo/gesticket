@@ -1,7 +1,9 @@
 import type { Express } from "express";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTicketSchema, insertCustomerSchema, insertTimeEntrySchema, insertTicketCommentSchema, insertKnowledgeArticleSchema } from "@shared/schema";
+import { insertTicketSchema, insertCustomerSchema, insertTimeEntrySchema, insertTicketCommentSchema, insertKnowledgeArticleSchema, insertTicketAttachmentSchema } from "@shared/schema";
+import { uploadTicketFiles, handleUploadErrors } from "./middleware/upload";
+import path from 'path';
 
 export async function registerRoutes(app: Express): Promise<void> {
   // Note: Auth is already set up in setupApp, so we don't need to set it up again
@@ -130,9 +132,11 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post('/api/tickets', isAuthenticated, async (req: any, res) => {
+  app.post('/api/tickets', isAuthenticated, uploadTicketFiles.array('attachments', 5), handleUploadErrors, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const files = req.files as Express.Multer.File[];
+      
       const ticketData = insertTicketSchema.parse({
         ...req.body,
         createdById: userId,
@@ -140,15 +144,35 @@ export async function registerRoutes(app: Express): Promise<void> {
       
       const ticket = await storage.createTicket(ticketData);
       
-      // Broadcast new ticket to WebSocket clients
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'ticket_created',
-            data: ticket,
-          }));
+      // Handle file attachments if any
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const attachmentData = {
+            ticketId: ticket.id,
+            userId: userId,
+            fileName: file.filename,
+            originalName: file.originalname,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            filePath: file.path,
+            isPublic: true,
+          };
+          
+          await storage.createTicketAttachment(attachmentData);
         }
-      });
+      }
+      
+      // Broadcast new ticket to WebSocket clients
+      if (typeof wss !== 'undefined' && wss.clients) {
+        wss.clients.forEach((client: any) => {
+          if (client.readyState === 1) { // WebSocket.OPEN
+            client.send(JSON.stringify({
+              type: 'ticket_created',
+              data: ticket,
+            }));
+          }
+        });
+      }
       
       res.status(201).json(ticket);
     } catch (error) {
