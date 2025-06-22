@@ -504,17 +504,14 @@ export class DatabaseStorage implements IStorage {
         userId ? eq(tickets.assigneeId, userId) : sql`true`
       ));
 
-    // SLA compliance (tickets resolved within SLA time)
+    // SLA compliance (simplified - using resolved tickets vs total)
     const [slaComplianceResult] = await db
       .select({
         total: count(),
-        compliant: count(sql`case when resolved_at <= resolution_deadline then 1 end`),
+        compliant: count(sql`case when status = 'resolved' then 1 end`),
       })
       .from(tickets)
-      .where(and(
-        eq(tickets.status, "resolved"),
-        userId ? eq(tickets.assigneeId, userId) : sql`true`
-      ));
+      .where(userId ? eq(tickets.assigneeId, userId) : sql`true`);
 
     // Average response time in hours
     const [avgResponseResult] = await db

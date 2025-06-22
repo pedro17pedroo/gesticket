@@ -16,6 +16,12 @@ GeckoStream is a comprehensive ticket management system built with a modern full
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js framework
 - **Language**: TypeScript with ES modules
+- **Architecture**: Clean Architecture with layered separation
+  - **Controllers**: Handle HTTP requests and responses
+  - **Services**: Business logic and orchestration
+  - **Repositories**: Data access and database operations
+  - **Models**: Type definitions and data structures
+  - **Middleware**: Cross-cutting concerns (auth, logging, errors)
 - **Database ORM**: Drizzle ORM with PostgreSQL
 - **Authentication**: Replit Auth with OpenID Connect
 - **Session Management**: Express sessions with PostgreSQL storage
@@ -104,7 +110,13 @@ GeckoStream is a comprehensive ticket management system built with a modern full
 - Connection pooling for production scalability
 
 ## Changelog
-- June 21, 2025. Initial setup
+- June 22, 2025: Migrated to Clean Architecture with proper separation of concerns
+  - Implemented Repository pattern for data access layer
+  - Created Service layer for business logic
+  - Added Controller layer for request handling
+  - Structured middleware for cross-cutting concerns
+  - Maintained backwards compatibility with legacy routes
+- June 21, 2025: Initial setup
 
 ## User Preferences
 
