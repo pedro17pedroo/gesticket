@@ -263,6 +263,7 @@ export default function TicketForm({ open, onOpenChange, ticket }: TicketFormPro
                       placeholder="Forneça detalhes adicionais sobre o ticket..."
                       className="min-h-[100px]"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -277,7 +278,7 @@ export default function TicketForm({ open, onOpenChange, ticket }: TicketFormPro
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Prioridade</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "medium"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a prioridade" />
@@ -301,7 +302,7 @@ export default function TicketForm({ open, onOpenChange, ticket }: TicketFormPro
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "support"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
@@ -380,7 +381,7 @@ export default function TicketForm({ open, onOpenChange, ticket }: TicketFormPro
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "open"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o status" />
