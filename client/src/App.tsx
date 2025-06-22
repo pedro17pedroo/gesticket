@@ -22,6 +22,8 @@ import NotFound from "@/pages/not-found";
 import ClientPortal from "@/pages/client-portal";
 import Settings from "@/pages/settings";
 import SLAConfig from "@/pages/sla-config";
+import CompanyManagement from "@/pages/company-management";
+import EnhancedClientPortal from "@/pages/enhanced-client-portal";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,6 +46,8 @@ function Router() {
           <Route path="/client-portal" component={ClientPortal} />
           <Route path="/settings" component={Settings} />
           <Route path="/sla-config" component={SLAConfig} />
+          <Route path="/company-management" component={CompanyManagement} />
+          <Route path="/enhanced-client-portal" component={EnhancedClientPortal} />
         </>
       )}
       <Route component={NotFound} />

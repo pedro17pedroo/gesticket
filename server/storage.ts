@@ -1,5 +1,6 @@
 import {
   users,
+  companies,
   customers,
   tickets,
   timeEntries,
@@ -7,8 +8,20 @@ import {
   ticketComments,
   satisfactionRatings,
   slaConfigs,
+  hourBanks,
+  hourBankRequests,
+  hourBankUsage,
   type User,
   type UpsertUser,
+  type Company,
+  type InsertCompany,
+  type CompanyWithRelations,
+  type UserWithRelations,
+  type HourBank,
+  type InsertHourBank,
+  type HourBankRequest,
+  type InsertHourBankRequest,
+  type HourBankUsage,
   type Customer,
   type InsertCustomer,
   type Ticket,
@@ -25,12 +38,24 @@ import {
   type SlaConfig,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, count, sum, avg, gte, lte } from "drizzle-orm";
+import { eq, desc, and, sql, count, sum, avg, gte, lte, or, like } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  getUsersForCompany(companyId: number): Promise<UserWithRelations[]>;
+  createUser(userData: UpsertUser): Promise<User>;
+  updateUser(id: string, userData: Partial<UpsertUser>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
+  
+  // Company operations
+  getCompanies(): Promise<CompanyWithRelations[]>;
+  getCompany(id: number): Promise<CompanyWithRelations | undefined>;
+  createCompany(company: InsertCompany): Promise<Company>;
+  updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company>;
+  deleteCompany(id: number): Promise<void>;
   
   // Customer operations
   getCustomers(): Promise<Customer[]>;
@@ -44,6 +69,8 @@ export interface IStorage {
     priority?: string;
     assigneeId?: string;
     customerId?: number;
+    companyId?: number;
+    createdById?: string;
     limit?: number;
     offset?: number;
   }): Promise<TicketWithRelations[]>;
@@ -83,20 +110,36 @@ export interface IStorage {
   getSlaConfigs(): Promise<SlaConfig[]>;
   getSlaConfig(level: string, priority: string): Promise<SlaConfig | undefined>;
   
+  // Hour bank operations
+  getHourBanks(companyId?: number): Promise<HourBank[]>;
+  getHourBank(id: number): Promise<HourBank | undefined>;
+  createHourBank(hourBank: InsertHourBank): Promise<HourBank>;
+  updateHourBank(id: number, hourBank: Partial<InsertHourBank>): Promise<HourBank>;
+  getHourBankStatus(companyId: number): Promise<{
+    limit: number;
+    used: number;
+    remaining: number;
+    percentage: number;
+  }>;
+  
+  // Hour bank request operations
+  getHourBankRequests(companyId?: number, status?: string): Promise<HourBankRequest[]>;
+  createHourBankRequest(request: InsertHourBankRequest): Promise<HourBankRequest>;
+  updateHourBankRequest(id: number, request: Partial<InsertHourBankRequest>): Promise<HourBankRequest>;
+  
+  // Hour bank usage operations
+  getHourBankUsage(companyId: number, filters?: {
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<HourBankUsage[]>;
+  createHourBankUsage(usage: Omit<HourBankUsage, 'id' | 'createdAt'>): Promise<HourBankUsage>;
+  
   // Dashboard statistics
   getDashboardStats(userId?: string): Promise<{
     activeTickets: number;
     slaCompliance: number;
     avgResponseTime: number;
     csatScore: number;
-  }>;
-  
-  // Hour bank operations
-  getHourBankStatus(customerId: number): Promise<{
-    limit: number;
-    used: number;
-    remaining: number;
-    percentage: number;
   }>;
 }
 
@@ -105,6 +148,107 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async getUsersForCompany(companyId: number): Promise<UserWithRelations[]> {
+    const results = await db
+      .select()
+      .from(users)
+      .leftJoin(companies, eq(users.companyId, companies.id))
+      .where(eq(users.companyId, companyId));
+    
+    return results.map(row => ({
+      ...row.users,
+      company: row.companies || undefined,
+    }));
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, userData: Partial<UpsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ ...userData, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
+  // Company operations
+  async getCompanies(): Promise<CompanyWithRelations[]> {
+    const results = await db
+      .select()
+      .from(companies)
+      .leftJoin(users, eq(companies.managerId, users.id))
+      .where(eq(companies.isActive, true));
+    
+    return results.map(row => ({
+      ...row.companies,
+      manager: row.users || undefined,
+    }));
+  }
+
+  async getCompany(id: number): Promise<CompanyWithRelations | undefined> {
+    const [result] = await db
+      .select()
+      .from(companies)
+      .leftJoin(users, eq(companies.managerId, users.id))
+      .where(eq(companies.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.companies,
+      manager: result.users || undefined,
+    };
+  }
+
+  async createCompany(company: InsertCompany): Promise<Company> {
+    const [newCompany] = await db
+      .insert(companies)
+      .values(company)
+      .returning();
+    return newCompany;
+  }
+
+  async updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company> {
+    const [updatedCompany] = await db
+      .update(companies)
+      .set({ ...company, updatedAt: new Date() })
+      .where(eq(companies.id, id))
+      .returning();
+    return updatedCompany;
+  }
+
+  async deleteCompany(id: number): Promise<void> {
+    await db.update(companies)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(companies.id, id));
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -152,6 +296,8 @@ export class DatabaseStorage implements IStorage {
     priority?: string;
     assigneeId?: string;
     customerId?: number;
+    companyId?: number;
+    createdById?: string;
     limit?: number;
     offset?: number;
   }): Promise<TicketWithRelations[]> {

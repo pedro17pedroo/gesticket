@@ -662,6 +662,321 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Company management routes
+  app.get('/api/companies', isAuthenticated, async (req, res) => {
+    try {
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+
+  app.get('/api/companies/:id', isAuthenticated, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      const company = await storage.getCompany(companyId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      res.json(company);
+    } catch (error) {
+      console.error("Error fetching company:", error);
+      res.status(500).json({ message: "Failed to fetch company" });
+    }
+  });
+
+  app.post('/api/companies', isAuthenticated, async (req, res) => {
+    try {
+      const companyData = req.body;
+      const company = await storage.createCompany(companyData);
+      res.status(201).json(company);
+    } catch (error) {
+      console.error("Error creating company:", error);
+      res.status(500).json({ message: "Failed to create company" });
+    }
+  });
+
+  app.put('/api/companies/:id', isAuthenticated, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      const companyData = req.body;
+      const company = await storage.updateCompany(companyId, companyData);
+      res.json(company);
+    } catch (error) {
+      console.error("Error updating company:", error);
+      res.status(500).json({ message: "Failed to update company" });
+    }
+  });
+
+  app.delete('/api/companies/:id', isAuthenticated, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      await storage.deleteCompany(companyId);
+      res.json({ message: "Company deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting company:", error);
+      res.status(500).json({ message: "Failed to delete company" });
+    }
+  });
+
+  // Company users routes
+  app.get('/api/companies/:id/users', isAuthenticated, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      const users = await storage.getUsersForCompany(companyId);
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching company users:", error);
+      res.status(500).json({ message: "Failed to fetch company users" });
+    }
+  });
+
+  app.post('/api/users', isAuthenticated, async (req, res) => {
+    try {
+      const userData = req.body;
+      // Generate a temporary ID for new users (in real app, handle proper user creation)
+      const newUserData = {
+        ...userData,
+        id: `user_${Date.now()}`,
+        isActive: true
+      };
+      const user = await storage.createUser(newUserData);
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.put('/api/users/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const userData = req.body;
+      const user = await storage.updateUser(userId, userData);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Hour bank routes
+  app.get('/api/hour-banks', isAuthenticated, async (req, res) => {
+    try {
+      const companyId = req.query.companyId ? parseInt(req.query.companyId as string) : undefined;
+      const hourBanks = await storage.getHourBanks(companyId);
+      res.json(hourBanks);
+    } catch (error) {
+      console.error("Error fetching hour banks:", error);
+      res.status(500).json({ message: "Failed to fetch hour banks" });
+    }
+  });
+
+  app.post('/api/hour-banks', isAuthenticated, async (req, res) => {
+    try {
+      const hourBankData = req.body;
+      const hourBank = await storage.createHourBank(hourBankData);
+      res.status(201).json(hourBank);
+    } catch (error) {
+      console.error("Error creating hour bank:", error);
+      res.status(500).json({ message: "Failed to create hour bank" });
+    }
+  });
+
+  app.get('/api/companies/:id/hour-bank-status', isAuthenticated, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      const status = await storage.getHourBankStatus(companyId);
+      res.json(status);
+    } catch (error) {
+      console.error("Error fetching hour bank status:", error);
+      res.status(500).json({ message: "Failed to fetch hour bank status" });
+    }
+  });
+
+  // Hour bank requests routes
+  app.get('/api/hour-bank-requests', isAuthenticated, async (req, res) => {
+    try {
+      const companyId = req.query.companyId ? parseInt(req.query.companyId as string) : undefined;
+      const status = req.query.status as string;
+      const requests = await storage.getHourBankRequests(companyId, status);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching hour bank requests:", error);
+      res.status(500).json({ message: "Failed to fetch hour bank requests" });
+    }
+  });
+
+  app.post('/api/hour-bank-requests', isAuthenticated, async (req, res) => {
+    try {
+      const requestData = {
+        ...req.body,
+        requestedBy: req.user?.claims?.sub
+      };
+      const request = await storage.createHourBankRequest(requestData);
+      res.status(201).json(request);
+    } catch (error) {
+      console.error("Error creating hour bank request:", error);
+      res.status(500).json({ message: "Failed to create hour bank request" });
+    }
+  });
+
+  app.put('/api/hour-bank-requests/:id', isAuthenticated, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const requestData = req.body;
+      
+      if (requestData.status === 'approved') {
+        requestData.approvedBy = req.user?.claims?.sub;
+        requestData.approvedAt = new Date();
+      }
+      
+      const request = await storage.updateHourBankRequest(requestId, requestData);
+      res.json(request);
+    } catch (error) {
+      console.error("Error updating hour bank request:", error);
+      res.status(500).json({ message: "Failed to update hour bank request" });
+    }
+  });
+
+  // Client portal routes
+  app.get('/api/client/company', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.companyId) {
+        return res.status(404).json({ message: "User not associated with a company" });
+      }
+
+      const company = await storage.getCompany(user.companyId);
+      const hourBankStatus = await storage.getHourBankStatus(user.companyId);
+
+      res.json({
+        ...company,
+        hourBankStatus
+      });
+    } catch (error) {
+      console.error("Error fetching client company:", error);
+      res.status(500).json({ message: "Failed to fetch company information" });
+    }
+  });
+
+  app.get('/api/client/users', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.companyId) {
+        return res.status(404).json({ message: "User not associated with a company" });
+      }
+
+      const users = await storage.getUsersForCompany(user.companyId);
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching client users:", error);
+      res.status(500).json({ message: "Failed to fetch company users" });
+    }
+  });
+
+  app.post('/api/client/users', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const currentUser = await storage.getUser(userId);
+      
+      if (!currentUser?.companyId || currentUser.role !== 'client_manager') {
+        return res.status(403).json({ message: "Only client managers can create users" });
+      }
+
+      const userData = {
+        ...req.body,
+        id: `user_${Date.now()}`,
+        companyId: currentUser.companyId,
+        isActive: true
+      };
+
+      const user = await storage.createUser(userData);
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error creating client user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.get('/api/client/tickets', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.companyId) {
+        return res.status(404).json({ message: "User not associated with a company" });
+      }
+
+      const tickets = await storage.getTickets({ companyId: user.companyId });
+      res.json(tickets);
+    } catch (error) {
+      console.error("Error fetching client tickets:", error);
+      res.status(500).json({ message: "Failed to fetch company tickets" });
+    }
+  });
+
+  app.get('/api/client/hour-bank-requests', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.companyId) {
+        return res.status(404).json({ message: "User not associated with a company" });
+      }
+
+      const requests = await storage.getHourBankRequests(user.companyId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching hour bank requests:", error);
+      res.status(500).json({ message: "Failed to fetch hour bank requests" });
+    }
+  });
+
+  app.post('/api/client/hour-bank-requests', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.companyId) {
+        return res.status(404).json({ message: "User not associated with a company" });
+      }
+
+      const requestData = {
+        ...req.body,
+        companyId: user.companyId,
+        requestedBy: userId
+      };
+
+      const request = await storage.createHourBankRequest(requestData);
+      res.status(201).json(request);
+    } catch (error) {
+      console.error("Error creating hour bank request:", error);
+      res.status(500).json({ message: "Failed to create hour bank request" });
+    }
+  });
+
+  app.put('/api/tickets/:id/responsible', isAuthenticated, async (req, res) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const { clientResponsibleId } = req.body;
+      
+      const ticket = await storage.updateTicket(ticketId, { clientResponsibleId });
+      res.json(ticket);
+    } catch (error) {
+      console.error("Error updating ticket responsible:", error);
+      res.status(500).json({ message: "Failed to update ticket responsible" });
+    }
+  });
+
   // PWA and offline support routes
   app.get('/manifest.json', (req, res) => {
     const manifest = {

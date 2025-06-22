@@ -27,6 +27,8 @@ const navigation = [
   { name: 'Relatórios Avançados', href: '/advanced-reports', icon: TrendingUpIcon },
   { name: 'Base Conhecimento', href: '/knowledge-base', icon: BookOpenIcon },
   { name: 'Portal Cliente', href: '/client-portal', icon: UserCheck },
+  { name: 'Portal Avançado', href: '/enhanced-client-portal', icon: UserCheck },
+  { name: 'Gestão Empresas', href: '/company-management', icon: Users },
 ];
 
 const integrations = [
