@@ -1,13 +1,10 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTicketSchema, insertCustomerSchema, insertTimeEntrySchema, insertTicketCommentSchema } from "@shared/schema";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+export async function registerRoutes(app: Express): Promise<void> {
+  // Note: Auth is already set up in setupApp, so we don't need to set it up again
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -1022,45 +1019,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  const httpServer = createServer(app);
-
-  // WebSocket server for real-time updates
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws' 
-  });
-
-  wss.on('connection', (ws) => {
-    console.log('WebSocket client connected');
-    
-    ws.on('message', (message) => {
-      try {
-        const data = JSON.parse(message.toString());
-        console.log('WebSocket message received:', data);
-        
-        // Handle different message types
-        switch (data.type) {
-          case 'ping':
-            ws.send(JSON.stringify({ type: 'pong' }));
-            break;
-          default:
-            console.log('Unknown WebSocket message type:', data.type);
-        }
-      } catch (error) {
-        console.error('Error handling WebSocket message:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('WebSocket client disconnected');
-    });
-
-    // Send welcome message
-    ws.send(JSON.stringify({ 
-      type: 'welcome', 
-      message: 'Connected to GeckoStream WebSocket' 
-    }));
-  });
-
-  return httpServer;
+  // Note: WebSocket setup is handled in setupApp function
 }

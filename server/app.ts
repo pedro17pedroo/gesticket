@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./replitAuth";
 import { requestLogger, errorHandler } from "./middleware";
-import routes from "./routes";
+import { registerRoutes } from "./routes";
 
 export async function setupApp(app: Express): Promise<Server> {
   // Basic middleware
@@ -15,7 +15,7 @@ export async function setupApp(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Setup API routes
-  app.use(routes);
+  await registerRoutes(app);
 
   // Legacy routes for backwards compatibility
   await setupLegacyRoutes(app);
@@ -39,7 +39,10 @@ async function setupLegacyRoutes(app: Express): Promise<void> {
 }
 
 function setupWebSocket(server: Server): void {
-  const wss = new WebSocketServer({ server });
+  const wss = new WebSocketServer({ 
+    server, 
+    path: "/api/ws" // Use a specific path to avoid conflicts with Vite HMR
+  });
 
   wss.on("connection", (ws) => {
     console.log("WebSocket client connected");
