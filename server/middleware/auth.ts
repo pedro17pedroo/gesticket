@@ -50,7 +50,7 @@ async function createDevelopmentUser() {
   }
 }
 
-// Extend Express Request type to include user
+// Extend Express Session and Request types
 declare global {
   namespace Express {
     interface Request {
@@ -68,24 +68,77 @@ declare global {
         permissions: string[];
       };
     }
+    interface User {
+      id: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      role: string;
+      organizationId?: number;
+      departmentId?: number;
+      isSuperUser: boolean;
+      canCrossDepartments: boolean;
+      canCrossOrganizations: boolean;
+      permissions: string[];
+    }
+  }
+}
+
+declare module 'express-session' {
+  interface SessionData {
+    user?: { id: string };
   }
 }
 
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Development mode: Check for valid session first, then create test user if needed
+    // Development mode: Create/load super admin user
     if (process.env.NODE_ENV === 'development') {
-      // If no user in session and no user object, try to create development user
-      if (!req.user && !req.session?.user) {
-        try {
-          const testUser = await createDevelopmentUser();
-          req.user = testUser;
-          req.session.user = { id: testUser.id };
+      // Always ensure we have a super admin user for development
+      try {
+        // Get existing super admin user
+        const existingSuperAdmin = await db.query.users.findFirst({
+          where: eq(users.id, 'admin@geckostream.com'),
+          with: {
+            organization: true,
+            department: true,
+          }
+        });
+
+        if (existingSuperAdmin) {
+          // Get user permissions
+          const userPermissions = await db
+            .select({ name: permissions.name })
+            .from(userRoles)
+            .innerJoin(roles, eq(userRoles.roleId, roles.id))
+            .innerJoin(rolePermissions, eq(roles.id, rolePermissions.roleId))
+            .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+            .where(and(
+              eq(userRoles.userId, existingSuperAdmin.id),
+              eq(userRoles.isActive, true)
+            ));
+
+          req.user = {
+            id: existingSuperAdmin.id,
+            email: existingSuperAdmin.email || undefined,
+            firstName: existingSuperAdmin.firstName || undefined,
+            lastName: existingSuperAdmin.lastName || undefined,
+            role: existingSuperAdmin.role,
+            organizationId: existingSuperAdmin.organizationId || undefined,
+            departmentId: existingSuperAdmin.departmentId || undefined,
+            isSuperUser: true,
+            canCrossDepartments: true,
+            canCrossOrganizations: true,
+            permissions: userPermissions.map(p => p.name),
+          };
+          
+          // Set session
+          req.session.user = { id: existingSuperAdmin.id };
           return next();
-        } catch (devError) {
-          logger.error('Failed to create development user', { error: devError });
-          return res.status(500).json({ message: 'Development authentication failed' });
         }
+      } catch (devError) {
+        logger.error('Failed to load super admin user', { error: devError });
+        return res.status(500).json({ message: 'Development authentication failed' });
       }
       
       // If user exists in session but not populated, load it

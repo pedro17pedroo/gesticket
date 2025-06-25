@@ -18,19 +18,23 @@ export interface UserPermissions {
 export function usePermissions(): UserPermissions {
   const { user, isAuthenticated } = useAuth();
   
-  const { data: permissions = [] } = useQuery<Permission[]>({
+  const { data: permissionsResponse } = useQuery<{ success: boolean; permissions: string[] }>({
     queryKey: ['/api/user/permissions'],
     enabled: isAuthenticated && !!user,
     retry: false,
   });
 
+  const permissions = permissionsResponse?.permissions || [];
+
   const hasPermission = (resource: string, action: string): boolean => {
     if (!isAuthenticated || !user) return false;
     
-    // Admin users have all permissions
-    if (user.role === 'admin') return true;
+    // Super admin users have all permissions
+    if (user.role === 'super_admin' || user.isSuperUser) return true;
     
-    return permissions.some(p => p.resource === resource && p.action === action);
+    // Check if permission exists in format "resource:action"
+    const permissionName = `${resource}:${action}`;
+    return permissions.includes(permissionName);
   };
 
   const hasAnyPermission = (requiredPermissions: Array<{resource: string, action: string}>): boolean => {
@@ -38,7 +42,12 @@ export function usePermissions(): UserPermissions {
   };
 
   return {
-    permissions,
+    permissions: permissions.map(name => ({ 
+      id: 0, 
+      name, 
+      resource: name.split(':')[0], 
+      action: name.split(':')[1] 
+    })),
     hasPermission,
     hasAnyPermission,
   };

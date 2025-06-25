@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { isAuthenticated } from '../middleware/auth';
+import { simpleAuth } from '../middleware/simpleAuth';
 
 const router = Router();
 
 // Get current authenticated user
-router.get('/user', isAuthenticated, (req, res) => {
+router.get('/user', simpleAuth, (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Not authenticated' });
   }

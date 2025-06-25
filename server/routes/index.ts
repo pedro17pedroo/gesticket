@@ -2,8 +2,9 @@ import type { Express } from "express";
 
 // Import modular routes
 import authRoutes from './auth';
+import userPermissionsRoutes from './userPermissions';
 import ticketRoutes from './tickets';
-import dashboardRoutes from './dashboard';
+import simpleDashboardRoutes from './simpleDashboard';
 import customerRoutes from './customers';
 import timeTrackingRoutes from './time-tracking';
 import automationRoutes from './automation';
@@ -14,8 +15,9 @@ import integrationsRoutes from './integrations';
 export async function registerRoutes(app: Express): Promise<void> {
   // Setup modular routes with proper error handling
   app.use('/api/auth', authRoutes);
+  app.use('/api/user', userPermissionsRoutes);
   app.use('/api/tickets', ticketRoutes);
-  app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/dashboard', simpleDashboardRoutes);
   app.use('/api/customers', customerRoutes);
   app.use('/api/time-entries', timeTrackingRoutes);
   app.use('/api/automation', automationRoutes);
