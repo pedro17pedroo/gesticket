@@ -27,31 +27,31 @@ interface NavigationItem {
 }
 
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboardIcon, requiredPermissions: [{resource: 'dashboard', action: 'view'}] },
-  { name: 'Tickets', href: '/tickets', icon: TicketIcon, requiredPermissions: [{resource: 'tickets', action: 'list'}] },
-  { name: 'Clientes', href: '/customers', icon: Users, requiredPermissions: [{resource: 'customers', action: 'list'}] },
-  { name: 'SLAs', href: '/sla', icon: ClockIcon, requiredPermissions: [{resource: 'sla', action: 'view'}] },
-  { name: 'Tempo', href: '/time-tracking', icon: CheckCircleIcon, requiredPermissions: [{resource: 'time', action: 'list'}] },
-  { name: 'Gamificação', href: '/gamification', icon: Trophy, requiredPermissions: [{resource: 'gamification', action: 'view'}] },
-  { name: 'Relatórios', href: '/reports', icon: BarChart3Icon, requiredPermissions: [{resource: 'reports', action: 'view'}] },
-  { name: 'Relatórios Avançados', href: '/advanced-reports', icon: TrendingUpIcon, requiredPermissions: [{resource: 'reports', action: 'advanced'}] },
-  { name: 'Base Conhecimento', href: '/knowledge-base', icon: BookOpenIcon, requiredPermissions: [{resource: 'knowledge', action: 'list'}] },
-  { name: 'Portal Cliente', href: '/client-portal', icon: UserCheck, requiredPermissions: [{resource: 'client_portal', action: 'view'}] },
-  { name: 'Portal Avançado', href: '/enhanced-client-portal', icon: UserCheck, requiredPermissions: [{resource: 'client_portal', action: 'advanced'}] },
-  { name: 'Gestão Empresas', href: '/company-management', icon: Users, requiredPermissions: [{resource: 'companies', action: 'manage'}] },
-  { name: 'Controle de Acesso', href: '/access-control', icon: Shield, requiredPermissions: [{resource: 'access_control', action: 'manage'}] },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboardIcon, requiredPermissions: [{resource: 'dashboard', action: 'read'}] },
+  { name: 'Tickets', href: '/tickets', icon: TicketIcon, requiredPermissions: [{resource: 'tickets', action: 'read'}] },
+  { name: 'Clientes', href: '/customers', icon: Users, requiredPermissions: [{resource: 'customers', action: 'read'}] },
+  { name: 'SLAs', href: '/sla', icon: ClockIcon, requiredPermissions: [{resource: 'sla', action: 'manage'}] },
+  { name: 'Tempo', href: '/time-tracking', icon: CheckCircleIcon, requiredPermissions: [{resource: 'time_entries', action: 'read'}] },
+  { name: 'Gamificação', href: '/gamification', icon: Trophy },
+  { name: 'Relatórios', href: '/reports', icon: BarChart3Icon, requiredPermissions: [{resource: 'reports', action: 'read'}] },
+  { name: 'Analytics', href: '/analytics', icon: TrendingUpIcon, requiredPermissions: [{resource: 'analytics', action: 'read'}] },
+  { name: 'Base Conhecimento', href: '/knowledge-base', icon: BookOpenIcon, requiredPermissions: [{resource: 'knowledge_articles', action: 'read'}] },
+  { name: 'Portal Cliente', href: '/client-portal', icon: UserCheck },
+  { name: 'Gestão Empresas', href: '/company-management', icon: Users, requiredPermissions: [{resource: 'companies', action: 'read'}] },
+  { name: 'Controle de Acesso', href: '/access-control', icon: Shield, requiredPermissions: [{resource: 'users', action: 'read'}, {resource: 'roles', action: 'read'}] },
 ];
 
 const integrations: NavigationItem[] = [
-  { name: 'APIs & Webhooks', href: '/settings', icon: LinkIcon, requiredPermissions: [{resource: 'settings', action: 'manage'}] },
-  { name: 'Configurações', href: '/settings', icon: SettingsIcon, requiredPermissions: [{resource: 'settings', action: 'view'}] },
-  { name: 'Config. SLA', href: '/sla-config', icon: Target, requiredPermissions: [{resource: 'sla', action: 'config'}] },
+  { name: 'APIs & Webhooks', href: '/webhooks', icon: LinkIcon, requiredPermissions: [{resource: 'webhooks', action: 'manage'}] },
+  { name: 'Configurações', href: '/settings', icon: SettingsIcon, requiredPermissions: [{resource: 'settings', action: 'read'}] },
+  { name: 'Config. SLA', href: '/sla-config', icon: Target, requiredPermissions: [{resource: 'sla', action: 'manage'}] },
 ];
 
 export default function Sidebar() {
   const [location] = useLocation();
-  const { hasAnyPermission } = usePermissions();
-
+  const { hasAnyPermission, permissions } = usePermissions();
+  
+  // Show all navigation items for admin users, filter for others
   const filteredNavigation = navigation.filter(item => 
     !item.requiredPermissions || hasAnyPermission(item.requiredPermissions)
   );
@@ -59,6 +59,11 @@ export default function Sidebar() {
   const filteredIntegrations = integrations.filter(item => 
     !item.requiredPermissions || hasAnyPermission(item.requiredPermissions)
   );
+
+  // Debug: Log permissions for troubleshooting
+  console.log('User permissions:', permissions);
+  console.log('Filtered navigation items:', filteredNavigation.length);
+  console.log('Filtered integration items:', filteredIntegrations.length);
 
   return (
     <aside className="h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-200 dark:border-gray-700 flex flex-col">
