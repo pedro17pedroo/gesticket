@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useUserType } from "@/hooks/useUserType";
 
 interface NavigationItem {
   label: string;
@@ -33,21 +34,34 @@ interface NavigationItem {
   children?: NavigationItem[];
 }
 
-const navigationItems: NavigationItem[] = [
+// Navegação para usuários do sistema (proprietários)
+const systemOwnerNavigation: NavigationItem[] = [
   {
-    label: "Dashboard",
+    label: "Painel Multi-Organizacional",
+    href: "/multi-tenant-dashboard",
+    icon: BuildingIcon,
+    permissions: [{ resource: "dashboard", action: "view" }]
+  },
+  {
+    label: "Dashboard do Sistema",
     href: "/",
     icon: HomeIcon,
     permissions: [{ resource: "dashboard", action: "view" }]
   },
   {
-    label: "Tickets",
+    label: "Gestão de Clientes",
+    href: "/client-management",
+    icon: UsersIcon,
+    permissions: [{ resource: "clients", action: "manage" }]
+  },
+  {
+    label: "Tickets do Sistema",
     href: "/tickets",
     icon: TicketIcon,
     permissions: [{ resource: "tickets", action: "list" }],
     children: [
       {
-        label: "Todos os Tickets",
+        label: "Todos os Tickets de Clientes",
         href: "/tickets",
         icon: TicketIcon,
         permissions: [{ resource: "tickets", action: "list" }]
@@ -110,6 +124,66 @@ const navigationItems: NavigationItem[] = [
   }
 ];
 
+// Navegação para usuários de empresas clientes
+const clientCompanyNavigation: NavigationItem[] = [
+  {
+    label: "Dashboard",
+    href: "/",
+    icon: HomeIcon,
+    permissions: [{ resource: "dashboard", action: "view" }]
+  },
+  {
+    label: "Tickets",
+    href: "/tickets",
+    icon: TicketIcon,
+    permissions: [{ resource: "tickets", action: "list" }],
+    children: [
+      {
+        label: "Meus Tickets",
+        href: "/tickets",
+        icon: TicketIcon,
+        permissions: [{ resource: "tickets", action: "list" }]
+      },
+      {
+        label: "Novo Ticket",
+        href: "/tickets/new",
+        icon: TicketIcon,
+        permissions: [{ resource: "tickets", action: "create" }]
+      }
+    ]
+  },
+  {
+    label: "Utilizadores",
+    href: "/users",
+    icon: UsersIcon,
+    permissions: [{ resource: "users", action: "list" }]
+  },
+  {
+    label: "Relatórios",
+    href: "/reports",
+    icon: BarChart3Icon,
+    permissions: [{ resource: "reports", action: "view" }]
+  },
+  {
+    label: "Rastreamento de Tempo",
+    href: "/time-tracking",
+    icon: ClockIcon,
+    permissions: [{ resource: "time", action: "list" }]
+  },
+  {
+    label: "Base de Conhecimento",
+    href: "/knowledge-base",
+    icon: BookOpenIcon,
+    permissions: [{ resource: "knowledge", action: "list" }]
+  },
+  {
+    label: "Configurações",
+    href: "/settings",
+    icon: SettingsIcon,
+    permissions: [{ resource: "settings", action: "manage" }]
+  }
+];
+
 interface ModernSidebarProps {
   className?: string;
 }
@@ -120,6 +194,10 @@ export default function ModernSidebar({ className }: ModernSidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const { user, logout } = useAuth();
   const { hasAnyPermission } = usePermissions();
+  const userType = useUserType();
+
+  // Selecionar navegação baseada no tipo de usuário
+  const navigationItems = userType.isSystemUser ? systemOwnerNavigation : clientCompanyNavigation;
 
   const toggleExpanded = (href: string) => {
     setExpandedItems(prev => 

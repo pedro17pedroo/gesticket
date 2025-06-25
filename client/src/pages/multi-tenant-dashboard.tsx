@@ -24,6 +24,8 @@ export default function MultiTenantDashboard() {
     retry: false,
   });
 
+  const organizationsList = Array.isArray(organizations) ? organizations : [];
+
   const [selectedOrg, setSelectedOrg] = useState<OrganizationData | null>(null);
 
   const handleOrganizationSelect = (org: OrganizationData) => {
@@ -98,7 +100,7 @@ export default function MultiTenantDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {organizations.map((org: OrganizationData) => (
+                {organizationsList.map((org: OrganizationData) => (
                   <div
                     key={org.id}
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${

@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/language-context";
 import { ChatbotProvider } from "@/components/layout/chatbot-provider";
 import FloatingChatButton from "@/components/layout/floating-chat-button";
 import ProtectedRoute from "@/components/auth/protected-route";
+import SmartRedirect from "@/components/smart-redirect";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -43,7 +44,11 @@ function Router() {
         <Route path="/" component={Landing} />
       ) : (
         <>
-          <Route path="/" component={Dashboard} />
+          <Route path="/">
+            <SmartRedirect>
+              <Dashboard />
+            </SmartRedirect>
+          </Route>
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/organizations" component={MultiTenantDashboard} />
           <Route path="/multi-tenant-dashboard" component={MultiTenantDashboard} />
