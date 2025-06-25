@@ -6,6 +6,8 @@ import ticketRoutes from './tickets';
 import dashboardRoutes from './dashboard';
 import customerRoutes from './customers';
 import timeTrackingRoutes from './time-tracking';
+import automationRoutes from './automation';
+import gamificationRoutes from './gamification';
 
 export async function registerRoutes(app: Express): Promise<void> {
   // Setup modular routes with proper error handling
@@ -14,6 +16,8 @@ export async function registerRoutes(app: Express): Promise<void> {
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/customers', customerRoutes);
   app.use('/api/time-entries', timeTrackingRoutes);
+  app.use('/api/automation', automationRoutes);
+  app.use('/api/gamification', gamificationRoutes);
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
@@ -29,7 +33,9 @@ export async function registerRoutes(app: Express): Promise<void> {
         timeTracking: true,
         multiTenant: true,
         permissions: true,
-        websocket: true
+        websocket: true,
+        automation: true,
+        gamification: true
       }
     });
   });
