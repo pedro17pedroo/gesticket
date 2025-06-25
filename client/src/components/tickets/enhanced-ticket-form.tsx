@@ -36,6 +36,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TicketTemplates from "@/components/tickets/ticket-templates";
+import KnowledgeBase from "@/components/knowledge/knowledge-base";
 import { 
   Loader2Icon, 
   PaperclipIcon, 
@@ -46,7 +48,8 @@ import {
   UserIcon,
   AlertTriangleIcon,
   SettingsIcon,
-  ClockIcon
+  ClockIcon,
+  BookOpenIcon
 } from "lucide-react";
 
 // Enhanced ticket schema with all new fields
@@ -180,6 +183,8 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/tickets/user/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/tickets/user/${user?.id}/stats`] });
       toast({
         title: "Sucesso",
         description: "Ticket criado com sucesso!",
@@ -197,6 +202,22 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
       });
     },
   });
+
+  const handleTemplateSelect = (template: any) => {
+    form.setValue("title", template.titleTemplate);
+    form.setValue("description", template.descriptionTemplate);
+    form.setValue("priority", template.priority);
+    form.setValue("type", template.type);
+    form.setValue("category", template.category);
+    form.setValue("subcategory", template.subcategory);
+    form.setValue("tags", template.tags.join(", "));
+    setSelectedCategory(template.category);
+    
+    toast({
+      title: "Template aplicado",
+      description: `Template "${template.name}" foi aplicado ao formulário.`,
+    });
+  };
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -268,7 +289,7 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="basic" className="flex items-center gap-2">
                   <UserIcon className="h-4 w-4" />
                   Básico
@@ -281,6 +302,10 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
                   <ClockIcon className="h-4 w-4" />
                   Detalhes
                 </TabsTrigger>
+                <TabsTrigger value="knowledge" className="flex items-center gap-2">
+                  <BookOpenIcon className="h-4 w-4" />
+                  Ajuda
+                </TabsTrigger>
                 <TabsTrigger value="attachments" className="flex items-center gap-2">
                   <PaperclipIcon className="h-4 w-4" />
                   Anexos
@@ -290,7 +315,10 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
               <TabsContent value="basic" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Informações Básicas</CardTitle>
+                    <CardTitle className="flex items-center justify-between">
+                      Informações Básicas
+                      <TicketTemplates onSelectTemplate={handleTemplateSelect} />
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -702,6 +730,26 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
                 </Card>
               </TabsContent>
 
+              <TabsContent value="knowledge" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Base de Conhecimento</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <KnowledgeBase 
+                      searchQuery={form.watch("category") || ""}
+                      category={form.watch("category")}
+                      onArticleSelect={(article) => {
+                        toast({
+                          title: "Artigo selecionado",
+                          description: `Você pode usar informações de "${article.title}" para melhorar seu ticket.`,
+                        });
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="attachments" className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -779,7 +827,7 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      const tabs = ["basic", "technical", "details", "attachments"];
+                      const tabs = ["basic", "technical", "details", "knowledge", "attachments"];
                       const currentIndex = tabs.indexOf(activeTab);
                       if (currentIndex < tabs.length - 1) {
                         setActiveTab(tabs[currentIndex + 1]);
