@@ -137,6 +137,11 @@ function Router() {
               <ClientTicketsManagement />
             </ProtectedRoute>
           </Route>
+          <Route path="/client-tickets-management">
+            <ProtectedRoute requiredPermissions={[{resource: 'client_management', action: 'manage'}]}>
+              <ClientTicketsManagement />
+            </ProtectedRoute>
+          </Route>
         </>
       )}
       <Route component={NotFound} />

@@ -110,6 +110,16 @@ GeckoStream is a comprehensive ticket management system built with a modern full
 - Connection pooling for production scalability
 
 ## Changelog
+- June 25, 2025: Implementado sistema multi-tenant completo com gestão centralizada de empresas clientes
+  - Configurado utilizador super admin com acesso total ao sistema (mimopa7137@ofacer.com)
+  - Criado dashboard do sistema com métricas globais de todas as organizações cliente
+  - Desenvolvida interface de gestão de tickets de clientes com atribuição de técnicos do sistema
+  - Implementada página de detalhes de organizações cliente com gestão completa de utilizadores, departamentos e bolsas de horas
+  - Criado controlador ClientManagementController para gestão centralizada de empresas clientes
+  - Adicionada sidebar tenant-aware que detecta automaticamente o tipo de utilizador (sistema vs cliente)
+  - Sistema permite que técnicos do sistema atendam todos os tickets das empresas clientes
+  - Middleware de tenant configurado para carregar informações organizacionais e permissões
+  - Arquitetura multi-tenant garante segregação completa entre organizações cliente
 - June 25, 2025: Implemented super user access and comprehensive interface improvements
   - Created super user with complete system access (admin@geckostream.com)
   - Implemented modular, reusable UI components for consistent design

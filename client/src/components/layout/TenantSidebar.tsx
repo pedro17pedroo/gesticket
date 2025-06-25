@@ -40,8 +40,22 @@ export function TenantSidebar() {
       }
     ];
 
+    // Check if user is system user (super admin, system admin, or from system organization)
+    const isSystemUser = user?.role === 'super_admin' || 
+                        user?.role === 'system_admin' || 
+                        user?.organization?.type === 'system_owner' ||
+                        user?.isSuperUser;
+
+    console.log('TenantSidebar - Navigation check:', {
+      role: user?.role,
+      isSuperUser: user?.isSuperUser,
+      organizationType: user?.organization?.type,
+      isSystemUser,
+      organizationId: user?.organizationId
+    });
+
     // System owner navigation
-    if (user?.organization?.type === 'system_owner' || user?.isSuperUser) {
+    if (isSystemUser) {
       return [
         ...baseItems,
         {
@@ -69,9 +83,10 @@ export function TenantSidebar() {
           requiredRoles: ['super_admin', 'system_admin', 'system_agent']
         },
         {
-          title: 'Todos os Tickets',
-          href: '/tickets',
-          icon: Ticket
+          title: 'Tickets de Clientes',
+          href: '/client-tickets-management',
+          icon: Ticket,
+          requiredRoles: ['super_admin', 'system_admin']
         },
         {
           title: 'Utilizadores',
@@ -94,52 +109,38 @@ export function TenantSidebar() {
       ];
     }
 
-    // Client company navigation
+    // Client company navigation (fallback if somehow not detected as system user)
     return [
       ...baseItems,
       {
-        title: 'Meus Tickets',
+        title: 'Todos os Tickets',
         href: '/tickets',
         icon: Ticket
       },
       {
-        title: 'Criar Ticket',
-        href: '/ticket-form',
-        icon: FolderOpen
+        title: 'Dashboard Sistema',
+        href: '/system-dashboard',
+        icon: Building2
       },
       {
-        title: 'Departamentos',
-        href: '/departments',
-        icon: Users,
-        requiredRoles: ['company_admin', 'company_manager']
+        title: 'Multi-Tenant',
+        href: '/multi-tenant-dashboard',
+        icon: Building2
       },
       {
-        title: 'Utilizadores',
-        href: '/company-users',
-        icon: UserCheck,
-        requiredRoles: ['company_admin', 'company_manager']
+        title: 'Organizações',
+        href: '/organizations',
+        icon: Building2
       },
       {
-        title: 'Tempos',
-        href: '/time-tracking',
-        icon: Clock
-      },
-      {
-        title: 'Base Conhecimento',
-        href: '/knowledge-base',
-        icon: BookOpen
-      },
-      {
-        title: 'Relatórios',
-        href: '/company-reports',
-        icon: BarChart3,
-        requiredRoles: ['company_admin', 'company_manager']
+        title: 'Controlo Acesso',
+        href: '/access-control',
+        icon: Shield
       },
       {
         title: 'Configurações',
-        href: '/company-settings',
-        icon: Settings,
-        requiredRoles: ['company_admin']
+        href: '/settings',
+        icon: Settings
       }
     ];
   };

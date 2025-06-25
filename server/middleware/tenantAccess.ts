@@ -56,11 +56,33 @@ export async function loadTenantInfo(req: Request, res: Response, next: NextFunc
     });
 
     if (userWithTenant) {
-      // Extend user object with tenant information
-      req.user = {
-        ...req.user,
-        ...userWithTenant
-      } as TenantUser;
+      // Enhance user object with tenant information
+      Object.assign(req.user, {
+        firstName: userWithTenant.firstName,
+        lastName: userWithTenant.lastName,
+        organizationId: userWithTenant.organizationId,
+        departmentId: userWithTenant.departmentId,
+        role: userWithTenant.role,
+        organization: userWithTenant.organization,
+        department: userWithTenant.department,
+        userRoles: userWithTenant.userRoles,
+        isSuperUser: userWithTenant.role === 'super_admin',
+        canCrossOrganizations: userWithTenant.role === 'super_admin' || userWithTenant.role === 'system_admin',
+        canCrossDepartments: 
+          userWithTenant.role === 'super_admin' || 
+          userWithTenant.role === 'system_admin' || 
+          userWithTenant.role === 'company_admin' ||
+          userWithTenant.role === 'company_manager'
+      });
+
+      console.log('Tenant middleware - User enhanced:', {
+        id: req.user.id,
+        email: req.user.email,
+        role: userWithTenant.role,
+        isSuperUser: userWithTenant.role === 'super_admin',
+        organizationType: userWithTenant.organization?.type,
+        organizationId: userWithTenant.organizationId
+      });
     }
 
     next();

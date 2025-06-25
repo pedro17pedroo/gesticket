@@ -10,9 +10,22 @@ interface User {
   companyId?: number;
   managerId?: string;
   departmentId?: number;
+  organizationId?: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  organization?: {
+    id: number;
+    name: string;
+    type: 'system_owner' | 'client_company';
+  };
+  department?: {
+    id: number;
+    name: string;
+  };
+  isSuperUser?: boolean;
+  canCrossOrganizations?: boolean;
+  canCrossDepartments?: boolean;
 }
 
 export function useAuth() {
@@ -22,21 +35,8 @@ export function useAuth() {
     refetchOnWindowFocus: false,
   });
 
-  // In development, provide super admin access when no user data
-  const effectiveUser: User | undefined = user || (!isLoading && !user ? {
-    id: 'dev-super-admin-123',
-    email: 'admin@geckostream.com',
-    firstName: 'Super',
-    lastName: 'Admin',
-    profileImageUrl: null,
-    role: 'super_admin',
-    companyId: null,
-    managerId: null,
-    departmentId: null,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } : undefined);
+  // Enhanced user with tenant information
+  const effectiveUser: User | undefined = user;
 
   const isAuthenticated = !!effectiveUser && !error;
 
