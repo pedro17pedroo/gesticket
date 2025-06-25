@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import MainLayout from "@/components/layout/main-layout";
+import UserDashboard from "@/components/dashboard/user-dashboard";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RecentTickets from "@/components/dashboard/recent-tickets";
 import SlaAlerts from "@/components/dashboard/sla-alerts";
@@ -16,8 +17,20 @@ import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [socket, setSocket] = useState<WebSocket | null>(null);
+
+  // Show user-specific dashboard for non-admin users
+  if (user && user.role !== 'admin') {
+    return (
+      <MainLayout>
+        <div className="p-6">
+          <h1 className="text-3xl font-bold mb-6">Meu Dashboard</h1>
+          <UserDashboard />
+        </div>
+      </MainLayout>
+    );
+  }
 
   // Redirect if not authenticated
   useEffect(() => {

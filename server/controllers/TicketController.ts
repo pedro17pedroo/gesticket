@@ -39,6 +39,35 @@ export class TicketController extends BaseController {
     });
   }
 
+  async getUserTickets(req: Request, res: Response): Promise<void> {
+    await this.handleRequest(req, res, async () => {
+      const user = this.getAuthenticatedUser(req);
+      const userId = req.params.userId;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      // Users can only see their own tickets unless they are admin
+      if (userId !== user.id && user.role !== 'admin') {
+        throw new Error('Unauthorized to view other user tickets');
+      }
+      
+      return await this.ticketService.getUserTickets(userId, limit);
+    });
+  }
+
+  async getUserTicketStats(req: Request, res: Response): Promise<void> {
+    await this.handleRequest(req, res, async () => {
+      const user = this.getAuthenticatedUser(req);
+      const userId = req.params.userId;
+      
+      // Users can only see their own stats unless they are admin
+      if (userId !== user.id && user.role !== 'admin') {
+        throw new Error('Unauthorized to view other user stats');
+      }
+      
+      return await this.ticketService.getUserTicketStats(userId);
+    });
+  }
+
   async createTicket(req: Request, res: Response): Promise<void> {
     await this.handleRequest(req, res, async () => {
       const user = this.getAuthenticatedUser(req);

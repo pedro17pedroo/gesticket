@@ -17,7 +17,8 @@ export async function setupApp(app: Express): Promise<Server> {
     dest: 'uploads/', 
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
   });
-  app.use('/api/tickets', upload.array('attachments', 5)); // Max 5 files
+  // Apply multer middleware only to POST routes for tickets
+  app.post('/api/tickets', upload.array('attachments', 5)); // Max 5 files
 
   // Setup authentication
   await setupAuth(app);

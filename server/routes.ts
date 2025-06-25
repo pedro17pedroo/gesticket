@@ -132,6 +132,44 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // User ticket routes
+  app.get("/api/tickets/user/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.userId;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const user = req.user.claims;
+      
+      // Users can only see their own tickets unless they are admin
+      if (userId !== user.sub && user.role !== 'admin') {
+        return res.status(403).json({ message: 'Unauthorized to view other user tickets' });
+      }
+      
+      const tickets = await storage.getUserTickets(userId, limit);
+      res.json(tickets);
+    } catch (error) {
+      console.error('Error fetching user tickets:', error);
+      res.status(500).json({ message: 'Failed to fetch user tickets' });
+    }
+  });
+
+  app.get("/api/tickets/user/:userId/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.params.userId;
+      const user = req.user.claims;
+      
+      // Users can only see their own stats unless they are admin
+      if (userId !== user.sub && user.role !== 'admin') {
+        return res.status(403).json({ message: 'Unauthorized to view other user stats' });
+      }
+      
+      const stats = await storage.getUserTicketStats(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching user ticket stats:', error);
+      res.status(500).json({ message: 'Failed to fetch user ticket stats' });
+    }
+  });
+
   app.post('/api/tickets', isAuthenticated, uploadTicketFiles.array('attachments', 5), handleUploadErrors, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

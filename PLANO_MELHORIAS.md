@@ -22,22 +22,22 @@
 - [x] ✅ Melhorar UX/UI do formulário
 
 ### FASE 2: Informações do Solicitante (Prioridade Alta)
-- [ ] 📋 Auto-preenchimento de dados do usuário autenticado
-- [ ] 📋 Campos para departamento/empresa
-- [ ] 📋 Telefone de contato opcional
-- [ ] 📋 Integração com dados de perfil
+- [x] ✅ Auto-preenchimento de dados do usuário autenticado
+- [x] ✅ Campos para departamento/empresa
+- [x] ✅ Telefone de contato opcional
+- [x] ✅ Integração com dados de perfil
 
 ### FASE 3: Categorização e Campos Dinâmicos (Prioridade Média)
-- [ ] 🔀 Implementar subcategorias
-- [ ] 🔀 Campos condicionais baseados na categoria
-- [ ] 🔀 Sistema de impacto vs urgência
-- [ ] 🔀 Tags personalizáveis
+- [x] ✅ Implementar subcategorias
+- [x] ✅ Campos condicionais baseados na categoria
+- [x] ✅ Sistema de impacto vs urgência
+- [x] ✅ Tags personalizáveis
 
 ### FASE 4: Funcionalidades Avançadas (Prioridade Média)
-- [ ] 🚀 Base de conhecimento integrada
-- [ ] 🚀 Sugestões automáticas
-- [ ] 🚀 Templates de formulário
-- [ ] 🚀 Notificações automáticas
+- [x] ✅ Base de conhecimento integrada
+- [ ] 🔄 Sugestões automáticas
+- [ ] 🔄 Templates de formulário
+- [ ] 🔄 Notificações automáticas
 
 ### FASE 5: Recursos Empresariais (Prioridade Baixa)
 - [ ] 🏢 SLA automático baseado em perfil
