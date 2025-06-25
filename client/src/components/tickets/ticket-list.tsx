@@ -8,7 +8,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Eye, Edit, Trash2, LayoutGrid, List } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, LayoutGrid, List, Ticket } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useLocation } from "wouter";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -124,7 +124,7 @@ export default function TicketList({
   if (tickets.length === 0) {
     return (
       <EmptyState
-        icon={<TicketIcon className="h-12 w-12" />}
+        icon={<Ticket className="h-12 w-12" />}
         title="Nenhum ticket encontrado"
         description="Não há tickets correspondentes aos filtros aplicados."
         action={
