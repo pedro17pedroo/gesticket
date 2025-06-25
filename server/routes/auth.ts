@@ -31,9 +31,23 @@ router.get('/user', isAuthenticated, (req, res) => {
 router.post('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
+      console.error('Error destroying session:', err);
       return res.status(500).json({ message: 'Could not log out' });
     }
+    res.clearCookie('connect.sid');
     res.json({ success: true, message: 'Logged out successfully' });
+  });
+});
+
+// Legacy GET logout for compatibility
+router.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error destroying session:', err);
+      return res.redirect('/?error=logout_failed');
+    }
+    res.clearCookie('connect.sid');
+    res.redirect('/');
   });
 });
 

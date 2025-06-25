@@ -54,11 +54,11 @@ function Router() {
               <TicketFormPage />
             </ProtectedRoute>
           </Route>
-          <Route path="/customers">
-            <ProtectedRoute requiredPermissions={[{resource: 'customers', action: 'list'}]}>
-              <Customers />
-            </ProtectedRoute>
-          </Route>
+          <Route path="/customers" component={Customers} />
+          <Route path="/users" component={() => <div className="p-8">Página de Utilizadores - Em desenvolvimento</div>} />
+          <Route path="/companies" component={() => <div className="p-8">Página de Empresas - Em desenvolvimento</div>} />
+          <Route path="/access-control" component={AccessControl} />
+          <Route path="/automation" component={() => <div className="p-8">Página de Automação - Em desenvolvimento</div>} />
           <Route path="/sla">
             <ProtectedRoute requiredPermissions={[{resource: 'sla', action: 'view'}]}>
               <SLA />

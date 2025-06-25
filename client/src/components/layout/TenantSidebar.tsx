@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useLogout } from '@/hooks/useLogout';
+import { Button } from '@/components/ui/button';
 import { 
   Building2, 
   Users, 
@@ -14,7 +16,10 @@ import {
   UserCheck,
   Clock,
   BookOpen,
-  Bell
+  Bell,
+  LogOut,
+  Zap,
+  Target
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -29,6 +34,7 @@ interface NavItem {
 
 export function TenantSidebar() {
   const { user } = useAuth();
+  const logout = useLogout();
   const [location] = useLocation();
 
   const getNavItems = (): NavItem[] => {
@@ -208,23 +214,23 @@ export function TenantSidebar() {
         {navItems.map((item) => {
           const isActive = location === item.href || location.startsWith(item.href + '/');
           return (
-            <Link key={item.href} href={item.href}>
-              <a
-                className={cn(
-                  'flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-                {item.badge && (
-                  <Badge variant="secondary" className="ml-auto">
-                    {item.badge}
-                  </Badge>
-                )}
-              </a>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.title}</span>
+              {item.badge && (
+                <Badge variant="secondary" className="ml-auto">
+                  {item.badge}
+                </Badge>
+              )}
             </Link>
           );
         })}
@@ -250,6 +256,20 @@ export function TenantSidebar() {
           >
             {user?.organization?.type === 'system_owner' ? 'Sistema' : 'Cliente'}
           </Badge>
+        </div>
+        
+        {/* Logout Button */}
+        <div className="mt-4 pt-4 border-t">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={() => logout.mutate()}
+            disabled={logout.isPending}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            {logout.isPending ? 'A sair...' : 'Logout'}
+          </Button>
         </div>
       </div>
     </div>
