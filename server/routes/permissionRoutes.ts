@@ -14,8 +14,8 @@ router.get('/user/permissions', isAuthenticated, async (req, res) => {
       return res.status(401).json({ message: "User ID not found" });
     }
 
-    // In development mode, return all permissions for admin
-    if (user.claims?.role === 'admin') {
+    // Super admin and admin have all permissions
+    if (user.claims?.role === 'super_admin' || user.claims?.role === 'admin') {
       const allPermissions = await storage.getPermissions();
       return res.json(allPermissions);
     }

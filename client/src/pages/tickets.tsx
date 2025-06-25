@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import MainLayout from "@/components/layout/main-layout";
 import TicketCard from "@/components/tickets/ticket-card";
+import TicketList from "@/components/tickets/ticket-list";
 import EnhancedTicketForm from "@/components/tickets/enhanced-ticket-form";
 import PageHeader from "@/components/common/page-header";
 import TicketStatusBadge from "@/components/tickets/ticket-status-badge";
@@ -126,23 +127,48 @@ export default function Tickets() {
           </div>
             
             <TabsContent value="all" className="mt-6">
-              <TicketsList tickets={filteredTickets} isLoading={isLoading} />
+              <TicketList 
+                tickets={filteredTickets} 
+                isLoading={isLoading} 
+                view={viewMode}
+                onViewChange={setViewMode}
+              />
             </TabsContent>
             
             <TabsContent value="open" className="mt-6">
-              <TicketsList tickets={openTickets} isLoading={isLoading} />
+              <TicketList 
+                tickets={openTickets} 
+                isLoading={isLoading} 
+                view={viewMode}
+                onViewChange={setViewMode}
+              />
             </TabsContent>
             
             <TabsContent value="in_progress" className="mt-6">
-              <TicketsList tickets={inProgressTickets} isLoading={isLoading} />
+              <TicketList 
+                tickets={inProgressTickets} 
+                isLoading={isLoading} 
+                view={viewMode}
+                onViewChange={setViewMode}
+              />
             </TabsContent>
             
             <TabsContent value="waiting" className="mt-6">
-              <TicketsList tickets={waitingTickets} isLoading={isLoading} />
+              <TicketList 
+                tickets={waitingTickets} 
+                isLoading={isLoading} 
+                view={viewMode}
+                onViewChange={setViewMode}
+              />
             </TabsContent>
             
             <TabsContent value="resolved" className="mt-6">
-              <TicketsList tickets={resolvedTickets} isLoading={isLoading} />
+              <TicketList 
+                tickets={resolvedTickets} 
+                isLoading={isLoading} 
+                view={viewMode}
+                onViewChange={setViewMode}
+              />
             </TabsContent>
           </Tabs>
       </div>
@@ -152,41 +178,4 @@ export default function Tickets() {
   );
 }
 
-interface TicketsListProps {
-  tickets: TicketWithRelations[];
-  isLoading: boolean;
-}
 
-function TicketsList({ tickets, isLoading }: TicketsListProps) {
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (tickets.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <FilterIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum ticket encontrado</h3>
-        <p className="text-gray-500">Tente ajustar os filtros ou criar um novo ticket.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {tickets.map((ticket) => (
-        <TicketCard key={ticket.id} ticket={ticket} />
-      ))}
-    </div>
-  );
-}

@@ -27,8 +27,8 @@ export function usePermissions(): UserPermissions {
   const hasPermission = (resource: string, action: string): boolean => {
     if (!isAuthenticated || !user) return false;
     
-    // Admin role has all permissions in development
-    if (user.claims?.role === 'admin') return true;
+    // Super admin and admin roles have all permissions
+    if (user.claims?.role === 'super_admin' || user.claims?.role === 'admin') return true;
     
     return permissions.some(p => p.resource === resource && p.action === action);
   };

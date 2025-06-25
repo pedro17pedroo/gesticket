@@ -96,14 +96,15 @@ export async function setupAuth(app: Express) {
     
     // Mock authentication for development
     app.get("/api/login", (req, res) => {
-      // Create a mock user session for development
+      // Create a mock super user session for development
       req.login({
         claims: {
-          sub: "dev-user-123",
-          email: "dev@example.com",
-          first_name: "Developer",
-          last_name: "User",
+          sub: "dev-super-admin-123",
+          email: "admin@geckostream.com",
+          first_name: "Super",
+          last_name: "Admin",
           profile_image_url: null,
+          role: "super_admin",
         },
         access_token: "dev-token",
         refresh_token: "dev-refresh",
@@ -195,14 +196,14 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    // Ensure we have a mock user with required fields
+    // Ensure we have a mock super user with required fields
     if (!user.claims) {
       user.claims = {
-        sub: "dev-user-123",
-        email: "dev@example.com",
-        first_name: "Developer", 
-        last_name: "User",
-        role: "admin", // Give admin role in development
+        sub: "dev-super-admin-123",
+        email: "admin@geckostream.com",
+        first_name: "Super", 
+        last_name: "Admin",
+        role: "super_admin", // Super admin role with all permissions
       };
     }
     return next();
