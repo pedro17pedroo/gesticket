@@ -878,6 +878,77 @@ export class DatabaseStorage implements IStorage {
       percentage,
     };
   }
+
+  async getUserTickets(userId: string, limit?: number): Promise<any[]> {
+    try {
+      let query = this.db
+        .select()
+        .from(tickets)
+        .leftJoin(customers, eq(tickets.customerId, customers.id))
+        .leftJoin(companies, eq(tickets.companyId, companies.id))
+        .leftJoin(users, eq(tickets.assigneeId, users.id))
+        .where(eq(tickets.createdById, userId))
+        .orderBy(desc(tickets.createdAt));
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const result = await query;
+      
+      return result.map(row => ({
+        ...row.tickets,
+        customer: row.customers,
+        company: row.companies,
+        assignee: row.users,
+      }));
+    } catch (error) {
+      console.error('Error fetching user tickets:', error);
+      throw error;
+    }
+  }
+
+  async getUserTicketStats(userId: string): Promise<any> {
+    try {
+      const userTickets = await this.db
+        .select()
+        .from(tickets)
+        .where(eq(tickets.createdById, userId));
+
+      const total = userTickets.length;
+      const open = userTickets.filter(t => ['open', 'in_progress', 'waiting_customer'].includes(t.status)).length;
+      const resolved = userTickets.filter(t => ['resolved', 'closed'].includes(t.status)).length;
+      
+      // Calculate average resolution time (in hours)
+      const resolvedTickets = userTickets.filter(t => t.resolvedAt);
+      let avgResolutionTime = 0;
+      
+      if (resolvedTickets.length > 0) {
+        const totalResolutionTime = resolvedTickets.reduce((sum, ticket) => {
+          const created = new Date(ticket.createdAt).getTime();
+          const resolved = new Date(ticket.resolvedAt!).getTime();
+          return sum + (resolved - created);
+        }, 0);
+        
+        avgResolutionTime = totalResolutionTime / resolvedTickets.length / (1000 * 60 * 60); // Convert to hours
+      }
+
+      const lastTicket = userTickets.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0];
+
+      return {
+        total,
+        open,
+        resolved,
+        avgResolutionTime,
+        lastTicketDate: lastTicket?.createdAt
+      };
+    } catch (error) {
+      console.error('Error fetching user ticket stats:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
