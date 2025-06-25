@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./replitAuth";
 import { requestLogger, errorHandler } from "./middleware";
-import { registerRoutes } from "./routes";
+// Routes will be imported dynamically
 import permissionRoutes from "./routes/permissionRoutes";
 
 export async function setupApp(app: Express): Promise<Server> {
@@ -29,6 +29,7 @@ export async function setupApp(app: Express): Promise<Server> {
   app.use(loadTenantInfo);
 
   // Setup API routes
+  const { registerRoutes } = await import('./routes/index.js');
   await registerRoutes(app);
   
   // Setup permission routes

@@ -1,177 +1,91 @@
-import { useState, useRef } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { z } from "zod";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import TicketTemplates from "@/components/tickets/ticket-templates";
-import KnowledgeBase from "@/components/knowledge/knowledge-base";
-import SmartSuggestions from "@/components/ai/smart-suggestions";
-import { 
-  Loader2Icon, 
-  PaperclipIcon, 
-  XIcon, 
-  FileIcon, 
-  ImageIcon, 
-  FileTextIcon,
-  UserIcon,
-  AlertTriangleIcon,
-  SettingsIcon,
-  ClockIcon,
-  BookOpenIcon
-} from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Upload, X, AlertCircle, Paperclip } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-// Enhanced ticket schema with all new fields
-const enhancedTicketSchema = z.object({
-  title: z.string().min(1, "Título é obrigatório").max(255),
-  description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
-  priority: z.enum(["low", "medium", "high", "critical"]),
-  type: z.enum(["support", "incident", "optimization", "feature_request"]),
+const ticketFormSchema = z.object({
+  title: z.string().min(5, 'Título deve ter pelo menos 5 caracteres'),
+  description: z.string().min(20, 'Descrição deve ter pelo menos 20 caracteres'),
+  priority: z.enum(['low', 'medium', 'high', 'critical']),
+  type: z.enum(['support', 'incident', 'optimization', 'feature_request']),
+  customerId: z.number().optional(),
   category: z.string().optional(),
   subcategory: z.string().optional(),
-  
-  // User information
-  contactPhone: z.string().optional(),
-  
-  // Technical details
   environment: z.string().optional(),
   affectedSystem: z.string().optional(),
   location: z.string().optional(),
+  contactPhone: z.string().optional(),
   incidentDate: z.string().optional(),
-  
-  // Problem description
   stepsToReproduce: z.string().optional(),
   expectedBehavior: z.string().optional(),
   actualBehavior: z.string().optional(),
-  
-  // Impact and urgency
-  impact: z.enum(["low", "medium", "high", "critical"]).default("medium"),
-  urgency: z.enum(["low", "medium", "high", "critical"]).default("medium"),
-  
-  // Tags
+  impact: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  urgency: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   tags: z.string().optional(),
-  
-  // Assignment
-  customerId: z.number().optional(),
-  assigneeId: z.string().optional(),
 });
 
-type EnhancedTicketData = z.infer<typeof enhancedTicketSchema>;
+type TicketFormData = z.infer<typeof ticketFormSchema>;
 
 interface EnhancedTicketFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  ticket?: any;
+  onSubmit?: (data: TicketFormData) => void;
+  initialData?: Partial<TicketFormData>;
+  isEditing?: boolean;
 }
 
-const CATEGORIES = [
-  { value: "hardware", label: "Hardware", subcategories: ["Computador", "Impressora", "Monitor", "Rede"] },
-  { value: "software", label: "Software", subcategories: ["Aplicativo", "Sistema Operacional", "Licenças", "Updates"] },
-  { value: "acesso", label: "Acesso", subcategories: ["Login", "Permissões", "Senhas", "VPN"] },
-  { value: "email", label: "Email", subcategories: ["Outlook", "Webmail", "Configuração", "Spam"] },
-  { value: "telefonia", label: "Telefonia", subcategories: ["Telefone Fixo", "Celular", "Voip", "Conferência"] },
-  { value: "outros", label: "Outros", subcategories: ["Solicitação", "Dúvida", "Sugestão"] }
-];
-
-const ENVIRONMENTS = ["Produção", "Homologação", "Desenvolvimento", "Testes"];
-const SYSTEMS = ["ERP", "CRM", "Email", "Rede", "Website", "Banco de Dados", "Backup"];
-const LOCATIONS = ["Matriz", "Filial 1", "Filial 2", "Home Office", "Remoto"];
-
-export default function EnhancedTicketForm({ open, onOpenChange, ticket }: EnhancedTicketFormProps) {
-  const { toast } = useToast();
-  const { user } = useAuth();
+export default function EnhancedTicketForm({ onSubmit, initialData, isEditing = false }: EnhancedTicketFormProps) {
+  const [, setLocation] = useLocation();
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [currentTab, setCurrentTab] = useState('basic');
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [activeTab, setActiveTab] = useState("basic");
 
-  // Fetch customers and users for dropdowns
-  const { data: customers = [] } = useQuery({
-    queryKey: ["/api/customers"],
-    enabled: open,
-  });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
-    enabled: open,
-  });
-
-  const form = useForm<EnhancedTicketData>({
-    resolver: zodResolver(enhancedTicketSchema),
+  const form = useForm<TicketFormData>({
+    resolver: zodResolver(ticketFormSchema),
     defaultValues: {
-      title: ticket?.title || "",
-      description: ticket?.description || "",
-      priority: ticket?.priority || "medium",
-      type: ticket?.type || "support",
-      category: ticket?.category || "",
-      subcategory: ticket?.subcategory || "",
-      contactPhone: ticket?.contactPhone || "",
-      environment: ticket?.environment || "",
-      affectedSystem: ticket?.affectedSystem || "",
-      location: ticket?.location || "",
-      incidentDate: ticket?.incidentDate || "",
-      stepsToReproduce: ticket?.stepsToReproduce || "",
-      expectedBehavior: ticket?.expectedBehavior || "",
-      actualBehavior: ticket?.actualBehavior || "",
-      impact: ticket?.impact || "medium",
-      urgency: ticket?.urgency || "medium",
-      tags: ticket?.tags || "",
-      customerId: ticket?.customerId || undefined,
-      assigneeId: ticket?.assigneeId || undefined,
+      priority: 'medium',
+      type: 'support',
+      impact: 'medium',
+      urgency: 'medium',
+      ...initialData,
     },
   });
 
+  // Fetch customers for selection
+  const { data: customers = [] } = useQuery({
+    queryKey: ['/api/customers'],
+  });
+
+  // Create ticket mutation
   const createTicketMutation = useMutation({
-    mutationFn: async (data: EnhancedTicketData) => {
+    mutationFn: async (data: TicketFormData) => {
       const formData = new FormData();
       
-      // Add ticket data
+      // Append form data
       Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null) {
           formData.append(key, value.toString());
         }
       });
 
-      // Add files
-      selectedFiles.forEach((file) => {
-        formData.append(`attachments`, file);
+      // Append attachments
+      attachments.forEach((file) => {
+        formData.append('attachments', file);
       });
 
-      const response = await fetch("/api/tickets", {
-        method: "POST",
+      const response = await fetch('/api/tickets', {
+        method: 'POST',
         body: formData,
       });
 
@@ -182,707 +96,455 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/tickets/user/${user?.id}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/tickets/user/${user?.id}/stats`] });
-      toast({
-        title: "Sucesso",
-        description: "Ticket criado com sucesso!",
-      });
-      onOpenChange(false);
-      form.reset();
-      setSelectedFiles([]);
-      setActiveTab("basic");
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro",
-        description: "Falha ao criar ticket. Tente novamente.",
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/tickets'] });
+      setLocation('/tickets');
     },
   });
 
-  const handleTemplateSelect = (template: any) => {
-    form.setValue("title", template.titleTemplate);
-    form.setValue("description", template.descriptionTemplate);
-    form.setValue("priority", template.priority);
-    form.setValue("type", template.type);
-    form.setValue("category", template.category);
-    form.setValue("subcategory", template.subcategory);
-    form.setValue("tags", template.tags.join(", "));
-    setSelectedCategory(template.category);
-    
-    toast({
-      title: "Template aplicado",
-      description: `Template "${template.name}" foi aplicado ao formulário.`,
-    });
-  };
-
-  const handleSmartSuggestion = (suggestion: any) => {
-    switch (suggestion.type) {
-      case 'template':
-        // Find and apply the suggested template
-        const templates = [
-          { id: 'hardware-computer', priority: 'medium', type: 'incident', category: 'hardware', subcategory: 'Computador' },
-          { id: 'network-connection', priority: 'high', type: 'incident', category: 'hardware', subcategory: 'Rede' },
-          { id: 'email-issue', priority: 'medium', type: 'support', category: 'email', subcategory: 'Outlook' }
-        ];
-        const template = templates.find(t => t.id === suggestion.metadata.templateId);
-        if (template) {
-          form.setValue("priority", template.priority);
-          form.setValue("type", template.type);
-          form.setValue("category", template.category);
-          form.setValue("subcategory", template.subcategory);
-          setSelectedCategory(template.category);
-        }
-        break;
-      
-      case 'escalation_warning':
-        form.setValue("priority", suggestion.metadata.suggestedPriority);
-        form.setValue("urgency", suggestion.metadata.suggestedUrgency);
-        form.setValue("impact", "high");
-        break;
-        
-      default:
-        break;
+  const handleSubmit = (data: TicketFormData) => {
+    if (onSubmit) {
+      onSubmit(data);
+    } else {
+      createTicketMutation.mutate(data);
     }
-    
-    toast({
-      title: "Sugestão aplicada",
-      description: suggestion.description,
-    });
   };
 
-  const handleFileSelect = (files: FileList | null) => {
-    if (!files) return;
-    
-    const newFiles = Array.from(files).filter(file => {
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "Arquivo muito grande",
-          description: `${file.name} excede o limite de 10MB`,
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      // Validate file type
-      const allowedTypes = [
-        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-        'application/pdf', 'text/plain', 'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      ];
-      
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Tipo de arquivo não suportado",
-          description: `${file.name} não é um tipo de arquivo permitido`,
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      return true;
-    });
-    
-    setSelectedFiles(prev => [...prev, ...newFiles].slice(0, 5)); // Max 5 files
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setAttachments(prev => [...prev, ...files]);
   };
 
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const getFileIcon = (file: File) => {
-    if (file.type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
-    if (file.type === 'application/pdf') return <FileTextIcon className="h-4 w-4" />;
-    return <FileIcon className="h-4 w-4" />;
+  const categories = [
+    'Hardware',
+    'Software',
+    'Rede',
+    'Segurança',
+    'Email',
+    'Acesso',
+    'Performance',
+    'Backup',
+    'Outros'
+  ];
+
+  const subcategoriesByCategory: Record<string, string[]> = {
+    'Hardware': ['Computador', 'Impressora', 'Monitor', 'Teclado/Rato', 'Servidor'],
+    'Software': ['Sistema Operativo', 'Aplicação', 'Driver', 'Licenças'],
+    'Rede': ['Internet', 'Wi-Fi', 'VPN', 'Conectividade'],
+    'Segurança': ['Antivírus', 'Firewall', 'Acesso Não Autorizado', 'Malware'],
+    'Email': ['Configuração', 'Envio/Receção', 'Spam', 'Outlook'],
+    'Acesso': ['Login', 'Passwords', 'Permissões', 'Contas'],
+    'Performance': ['Lentidão', 'Crash', 'Timeout', 'Memória'],
+    'Backup': ['Falha de Backup', 'Restauro', 'Configuração'],
+    'Outros': ['Formação', 'Consultoria', 'Novo Equipamento']
   };
 
-  const onSubmit = (data: EnhancedTicketData) => {
-    createTicketMutation.mutate(data);
-  };
-
-  const selectedCategoryData = CATEGORIES.find(cat => cat.value === selectedCategory);
+  const selectedCategory = form.watch('category');
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangleIcon className="h-5 w-5" />
-            {ticket ? "Editar Ticket" : "Novo Ticket"}
-          </DialogTitle>
-          <DialogDescription>
-            Preencha as informações detalhadamente para um atendimento mais rápido e eficaz
-          </DialogDescription>
-        </DialogHeader>
+    <div className="max-w-4xl mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {isEditing ? 'Editar Ticket' : 'Criar Novo Ticket'}
+          </CardTitle>
+          <CardDescription>
+            Preencha os detalhes do ticket para registar o seu pedido de suporte
+          </CardDescription>
+        </CardHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="basic" className="flex items-center gap-2">
-                  <UserIcon className="h-4 w-4" />
-                  Básico
-                </TabsTrigger>
-                <TabsTrigger value="technical" className="flex items-center gap-2">
-                  <SettingsIcon className="h-4 w-4" />
-                  Técnico
-                </TabsTrigger>
-                <TabsTrigger value="details" className="flex items-center gap-2">
-                  <ClockIcon className="h-4 w-4" />
-                  Detalhes
-                </TabsTrigger>
-                <TabsTrigger value="knowledge" className="flex items-center gap-2">
-                  <BookOpenIcon className="h-4 w-4" />
-                  Ajuda
-                </TabsTrigger>
-                <TabsTrigger value="attachments" className="flex items-center gap-2">
-                  <PaperclipIcon className="h-4 w-4" />
-                  Anexos
-                </TabsTrigger>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
+                <TabsTrigger value="details">Detalhes Técnicos</TabsTrigger>
+                <TabsTrigger value="classification">Classificação</TabsTrigger>
+                <TabsTrigger value="attachments">Anexos</TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      Informações Básicas
-                      <TicketTemplates onSelectTemplate={handleTemplateSelect} />
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>Título *</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Descreva o problema ou solicitação de forma resumida..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="type"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipo</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o tipo" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="support">Suporte</SelectItem>
-                                <SelectItem value="incident">Incidente</SelectItem>
-                                <SelectItem value="optimization">Otimização</SelectItem>
-                                <SelectItem value="feature_request">Nova Funcionalidade</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="priority"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Prioridade</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a prioridade" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="low">Baixa</SelectItem>
-                                <SelectItem value="medium">Média</SelectItem>
-                                <SelectItem value="high">Alta</SelectItem>
-                                <SelectItem value="critical">Crítica</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Categoria</FormLabel>
-                            <Select onValueChange={(value) => {
-                              field.onChange(value);
-                              setSelectedCategory(value);
-                              form.setValue("subcategory", "");
-                            }} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a categoria" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {CATEGORIES.map(cat => (
-                                  <SelectItem key={cat.value} value={cat.value}>
-                                    {cat.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {selectedCategoryData && (
-                        <FormField
-                          control={form.control}
-                          name="subcategory"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Subcategoria</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione a subcategoria" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {selectedCategoryData.subcategories.map(sub => (
-                                    <SelectItem key={sub} value={sub}>
-                                      {sub}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
-                      <FormField
-                        control={form.control}
-                        name="contactPhone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Telefone de Contato</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="(11) 99999-9999"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Para contato em casos urgentes
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Descrição Detalhada *</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Descreva detalhadamente o problema ou solicitação. Inclua o máximo de informações possível..."
-                              rows={4}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Mínimo de 10 caracteres. Seja específico para um atendimento mais rápido.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Título *</Label>
+                    <Input
+                      id="title"
+                      placeholder="Resumo breve do problema"
+                      {...form.register('title')}
                     />
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                    {form.formState.errors.title && (
+                      <p className="text-sm text-red-600">{form.formState.errors.title.message}</p>
+                    )}
+                  </div>
 
-              <TabsContent value="technical" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Informações Técnicas</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="environment"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ambiente</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o ambiente" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {ENVIRONMENTS.map(env => (
-                                  <SelectItem key={env} value={env}>
-                                    {env}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  <div className="space-y-2">
+                    <Label htmlFor="customerId">Cliente</Label>
+                    <Select 
+                      value={form.watch('customerId')?.toString()} 
+                      onValueChange={(value) => form.setValue('customerId', parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers.map((customer: any) => (
+                          <SelectItem key={customer.id} value={customer.id.toString()}>
+                            {customer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-                      <FormField
-                        control={form.control}
-                        name="affectedSystem"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Sistema Afetado</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o sistema" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {SYSTEMS.map(sys => (
-                                  <SelectItem key={sys} value={sys}>
-                                    {sys}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição Detalhada *</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva o problema em detalhe..."
+                    rows={6}
+                    {...form.register('description')}
+                  />
+                  {form.formState.errors.description && (
+                    <p className="text-sm text-red-600">{form.formState.errors.description.message}</p>
+                  )}
+                </div>
 
-                      <FormField
-                        control={form.control}
-                        name="location"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Localização</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a localização" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {LOCATIONS.map(loc => (
-                                  <SelectItem key={loc} value={loc}>
-                                    {loc}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="priority">Prioridade</Label>
+                    <Select 
+                      value={form.watch('priority')} 
+                      onValueChange={(value) => form.setValue('priority', value as any)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Baixa</SelectItem>
+                        <SelectItem value="medium">Média</SelectItem>
+                        <SelectItem value="high">Alta</SelectItem>
+                        <SelectItem value="critical">Crítica</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                      <FormField
-                        control={form.control}
-                        name="incidentDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Data/Hora do Incidente</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="datetime-local"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Quando o problema começou a ocorrer
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Tipo</Label>
+                    <Select 
+                      value={form.watch('type')} 
+                      onValueChange={(value) => form.setValue('type', value as any)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="support">Suporte</SelectItem>
+                        <SelectItem value="incident">Incidente</SelectItem>
+                        <SelectItem value="optimization">Otimização</SelectItem>
+                        <SelectItem value="feature_request">Nova Funcionalidade</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                      <FormField
-                        control={form.control}
-                        name="impact"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Impacto</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o impacto" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="low">Baixo - Afeta um usuário</SelectItem>
-                                <SelectItem value="medium">Médio - Afeta um departamento</SelectItem>
-                                <SelectItem value="high">Alto - Afeta vários departamentos</SelectItem>
-                                <SelectItem value="critical">Crítico - Afeta toda a empresa</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="urgency"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Urgência</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a urgência" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="low">Baixa - Pode esperar</SelectItem>
-                                <SelectItem value="medium">Média - Próximos dias</SelectItem>
-                                <SelectItem value="high">Alta - Hoje</SelectItem>
-                                <SelectItem value="critical">Crítica - Imediatamente</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactPhone">Telefone de Contacto</Label>
+                    <Input
+                      id="contactPhone"
+                      placeholder="+351 912 345 678"
+                      {...form.register('contactPhone')}
+                    />
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="details" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Detalhes do Problema</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="stepsToReproduce"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Passos para Reproduzir</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="1. Primeiro faço isso...&#10;2. Depois faço aquilo...&#10;3. Então acontece..."
-                              rows={4}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Liste os passos exatos para reproduzir o problema
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="environment">Ambiente</Label>
+                    <Input
+                      id="environment"
+                      placeholder="Produção, Teste, Desenvolvimento..."
+                      {...form.register('environment')}
                     />
+                  </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="expectedBehavior"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Comportamento Esperado</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Descreva o que deveria acontecer..."
-                                rows={3}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  <div className="space-y-2">
+                    <Label htmlFor="affectedSystem">Sistema Afetado</Label>
+                    <Input
+                      id="affectedSystem"
+                      placeholder="CRM, ERP, Email..."
+                      {...form.register('affectedSystem')}
+                    />
+                  </div>
 
-                      <FormField
-                        control={form.control}
-                        name="actualBehavior"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Comportamento Atual</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Descreva o que realmente acontece..."
-                                rows={3}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Localização</Label>
+                    <Input
+                      id="location"
+                      placeholder="Escritório, Departamento..."
+                      {...form.register('location')}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="incidentDate">Data do Incidente</Label>
+                    <Input
+                      id="incidentDate"
+                      type="datetime-local"
+                      {...form.register('incidentDate')}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="stepsToReproduce">Passos para Reproduzir</Label>
+                    <Textarea
+                      id="stepsToReproduce"
+                      placeholder="1. Abrir aplicação...&#10;2. Clicar em...&#10;3. Inserir dados..."
+                      rows={4}
+                      {...form.register('stepsToReproduce')}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="expectedBehavior">Comportamento Esperado</Label>
+                      <Textarea
+                        id="expectedBehavior"
+                        placeholder="O que deveria acontecer..."
+                        rows={3}
+                        {...form.register('expectedBehavior')}
                       />
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="tags"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tags</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="palavra-chave1, palavra-chave2, palavra-chave3"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Separe as tags por vírgula
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
+                    <div className="space-y-2">
+                      <Label htmlFor="actualBehavior">Comportamento Atual</Label>
+                      <Textarea
+                        id="actualBehavior"
+                        placeholder="O que está realmente a acontecer..."
+                        rows={3}
+                        {...form.register('actualBehavior')}
+                      />
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
 
-              <TabsContent value="knowledge" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Base de Conhecimento</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <KnowledgeBase 
-                      searchQuery={form.watch("category") || ""}
-                      category={form.watch("category")}
-                      onArticleSelect={(article) => {
-                        toast({
-                          title: "Artigo selecionado",
-                          description: `Você pode usar informações de "${article.title}" para melhorar seu ticket.`,
-                        });
+              <TabsContent value="classification" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Categoria</Label>
+                    <Select 
+                      value={form.watch('category')} 
+                      onValueChange={(value) => {
+                        form.setValue('category', value);
+                        form.setValue('subcategory', ''); // Reset subcategory
                       }}
-                    />
-                  </CardContent>
-                </Card>
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subcategory">Subcategoria</Label>
+                    <Select 
+                      value={form.watch('subcategory')} 
+                      onValueChange={(value) => form.setValue('subcategory', value)}
+                      disabled={!selectedCategory}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar subcategoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedCategory && subcategoriesByCategory[selectedCategory]?.map((subcategory) => (
+                          <SelectItem key={subcategory} value={subcategory}>
+                            {subcategory}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="impact">Impacto</Label>
+                    <Select 
+                      value={form.watch('impact')} 
+                      onValueChange={(value) => form.setValue('impact', value as any)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Baixo</SelectItem>
+                        <SelectItem value="medium">Médio</SelectItem>
+                        <SelectItem value="high">Alto</SelectItem>
+                        <SelectItem value="critical">Crítico</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="urgency">Urgência</Label>
+                    <Select 
+                      value={form.watch('urgency')} 
+                      onValueChange={(value) => form.setValue('urgency', value as any)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Baixa</SelectItem>
+                        <SelectItem value="medium">Média</SelectItem>
+                        <SelectItem value="high">Alta</SelectItem>
+                        <SelectItem value="critical">Crítica</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags</Label>
+                  <Input
+                    id="tags"
+                    placeholder="urgente, servidor, email (separadas por vírgulas)"
+                    {...form.register('tags')}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use vírgulas para separar múltiplas tags
+                  </p>
+                </div>
               </TabsContent>
 
               <TabsContent value="attachments" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Anexos</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                        onChange={(e) => handleFileSelect(e.target.files)}
-                        className="hidden"
-                      />
-                      <div className="space-y-2">
-                        <PaperclipIcon className="mx-auto h-8 w-8 text-gray-400" />
-                        <div>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                  <div className="text-center">
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-4">
+                      <label htmlFor="file-upload" className="cursor-pointer">
+                        <span className="mt-2 block text-sm font-medium text-gray-900">
+                          Clique para fazer upload ou arraste ficheiros aqui
+                        </span>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          multiple
+                          className="sr-only"
+                          onChange={handleFileUpload}
+                          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip"
+                        />
+                      </label>
+                      <p className="mt-1 text-xs text-gray-500">
+                        PDF, DOC, PNG, JPG até 10MB cada
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Ficheiros Anexados</Label>
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                          <div className="flex items-center space-x-2">
+                            <Paperclip className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-700">{file.name}</span>
+                            <span className="text-xs text-gray-500">
+                              ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
                           <Button
                             type="button"
-                            variant="outline"
-                            onClick={() => fileInputRef.current?.click()}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAttachment(index)}
                           >
-                            Selecionar Arquivos
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        <p className="text-sm text-gray-500">
-                          Ou arraste e solte aqui. Máximo 5 arquivos, 10MB cada.
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Formatos: JPG, PNG, GIF, PDF, DOC, XLS, TXT
-                        </p>
-                      </div>
+                      ))}
                     </div>
-
-                    {selectedFiles.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Arquivos Selecionados:</h4>
-                        {selectedFiles.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              {getFileIcon(file)}
-                              <div>
-                                <p className="text-sm font-medium">{file.name}</p>
-                                <p className="text-xs text-gray-500">
-                                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                                </p>
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFile(index)}
-                            >
-                              <XIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-between items-center pt-6 border-t">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            {createTicketMutation.error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Erro ao criar ticket. Tente novamente.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex justify-between pt-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setLocation('/tickets')}
+              >
                 Cancelar
               </Button>
               
-              <div className="flex gap-2">
-                {activeTab !== "attachments" && (
+              <div className="space-x-2">
+                {currentTab !== 'basic' && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      const tabs = ["basic", "technical", "details", "knowledge", "attachments"];
-                      const currentIndex = tabs.indexOf(activeTab);
+                      const tabs = ['basic', 'details', 'classification', 'attachments'];
+                      const currentIndex = tabs.indexOf(currentTab);
+                      if (currentIndex > 0) {
+                        setCurrentTab(tabs[currentIndex - 1]);
+                      }
+                    }}
+                  >
+                    Anterior
+                  </Button>
+                )}
+                
+                {currentTab !== 'attachments' ? (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const tabs = ['basic', 'details', 'classification', 'attachments'];
+                      const currentIndex = tabs.indexOf(currentTab);
                       if (currentIndex < tabs.length - 1) {
-                        setActiveTab(tabs[currentIndex + 1]);
+                        setCurrentTab(tabs[currentIndex + 1]);
                       }
                     }}
                   >
                     Próximo
                   </Button>
+                ) : (
+                  <Button 
+                    type="submit" 
+                    disabled={createTicketMutation.isPending}
+                  >
+                    {createTicketMutation.isPending ? 'A criar...' : (isEditing ? 'Actualizar' : 'Criar Ticket')}
+                  </Button>
                 )}
-                
-                <Button type="submit" disabled={createTicketMutation.isPending}>
-                  {createTicketMutation.isPending && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
-                  {ticket ? "Atualizar" : "Criar"} Ticket
-                </Button>
               </div>
             </div>
           </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -38,25 +38,25 @@
 - [x] Criar departamentos exemplo
 
 #### 1.3 Correção de Autenticação
-- [ ] Verificar configuração Replit Auth
-- [ ] Corrigir middleware de autenticação
-- [ ] Implementar criação automática de usuários
-- [ ] Testar fluxo de login completo
+- [x] Verificar configuração Replit Auth
+- [x] Corrigir middleware de autenticação
+- [x] Implementar criação automática de usuários
+- [x] Testar fluxo de login completo
 
 ### FASE 2: Funcionalidades Essenciais (ALTA)
 **Tempo estimado: 2-3 horas**
 
 #### 2.1 Sistema de Tickets Funcional
-- [ ] Corrigir formulário de criação
-- [ ] Implementar validações robustas
-- [ ] Adicionar sistema de anexos
-- [ ] Testar fluxo completo de tickets
+- [x] Corrigir formulário de criação
+- [x] Implementar validações robustas
+- [x] Adicionar sistema de anexos
+- [x] Testar fluxo completo de tickets
 
 #### 2.2 Dashboard Operacional
-- [ ] Implementar métricas reais
-- [ ] Corrigir carregamento de dados
-- [ ] Adicionar filtros funcionais
-- [ ] Otimizar queries de performance
+- [x] Implementar métricas reais
+- [x] Corrigir carregamento de dados
+- [x] Adicionar filtros funcionais
+- [x] Otimizar queries de performance
 
 #### 2.3 Gestão de Usuários
 - [ ] Interface de administração

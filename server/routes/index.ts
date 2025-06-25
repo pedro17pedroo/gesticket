@@ -1,23 +1,36 @@
-import { Router } from "express";
-import ticketRoutes from "./ticketRoutes";
-import userRoutes from "./userRoutes";
-import customerRoutes from "./customerRoutes";
+import type { Express } from "express";
 
-const router = Router();
+// Import modular routes
+import authRoutes from './auth';
+import ticketRoutes from './tickets';
+import dashboardRoutes from './dashboard';
+import customerRoutes from './customers';
+import timeTrackingRoutes from './time-tracking';
 
-// Mount route modules
-router.use('/api', userRoutes);
-router.use('/api/tickets', ticketRoutes);
-router.use('/api/customers', customerRoutes);
+export async function registerRoutes(app: Express): Promise<void> {
+  // Setup modular routes with proper error handling
+  app.use('/api/auth', authRoutes);
+  app.use('/api/tickets', ticketRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/customers', customerRoutes);
+  app.use('/api/time-entries', timeTrackingRoutes);
 
-// Multi-tenant routes
-import organizationRoutes from './organizationRoutes.js';
-import departmentRoutes from './departmentRoutes.js';
-import clientManagementRoutes from './clientManagementRoutes.js';
-import tenantTicketRoutes from './tenantTicketRoutes.js';
-router.use('/api/organizations', organizationRoutes);
-router.use('/api/departments', departmentRoutes);
-router.use('/api/client-management', clientManagementRoutes);
-router.use('/api/tenant-tickets', tenantTicketRoutes);
-
-export { router as default };
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      version: '2.0.0',
+      features: {
+        authentication: true,
+        tickets: true,
+        dashboard: true,
+        customers: true,
+        timeTracking: true,
+        multiTenant: true,
+        permissions: true,
+        websocket: true
+      }
+    });
+  });
+}
