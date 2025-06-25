@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/theme-context";
-import Sidebar from "./sidebar";
+import { TenantSidebar } from "./TenantSidebar";
 import { cn } from "@/lib/utils";
 
 interface MainLayoutProps {
@@ -32,14 +32,14 @@ export default function MainLayout({
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <Sidebar />
+          <TenantSidebar />
         </div>
       </div>
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-64">
-          <Sidebar />
+          <TenantSidebar />
         </SheetContent>
       </Sheet>
 

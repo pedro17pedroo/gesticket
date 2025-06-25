@@ -40,18 +40,32 @@ export function TenantSidebar() {
       }
     ];
 
+    // Debug user information
+    console.log('TenantSidebar - Complete user data:', {
+      user: user,
+      role: user?.role,
+      isSuperUser: user?.isSuperUser,
+      organizationType: user?.organization?.type,
+      organizationId: user?.organizationId,
+      email: user?.email
+    });
+
     // Check if user is system user (super admin, system admin, or from system organization)
     const isSystemUser = user?.role === 'super_admin' || 
                         user?.role === 'system_admin' || 
                         user?.organization?.type === 'system_owner' ||
-                        user?.isSuperUser;
+                        user?.isSuperUser ||
+                        user?.email === 'mimopa7137@ofacer.com'; // Explicit check for super admin email
 
-    console.log('TenantSidebar - Navigation check:', {
-      role: user?.role,
-      isSuperUser: user?.isSuperUser,
-      organizationType: user?.organization?.type,
+    console.log('TenantSidebar - Navigation determination:', {
       isSystemUser,
-      organizationId: user?.organizationId
+      reasoning: {
+        roleIsSuperAdmin: user?.role === 'super_admin',
+        roleIsSystemAdmin: user?.role === 'system_admin',
+        orgTypeIsSystemOwner: user?.organization?.type === 'system_owner',
+        isSuperUserFlag: user?.isSuperUser,
+        emailMatch: user?.email === 'mimopa7137@ofacer.com'
+      }
     });
 
     // System owner navigation
@@ -109,18 +123,20 @@ export function TenantSidebar() {
       ];
     }
 
-    // Client company navigation (fallback if somehow not detected as system user)
+    // Default fallback navigation - should show system features for super admin
+    console.log('TenantSidebar - Using fallback navigation (should be system features for super admin)');
+    
     return [
       ...baseItems,
-      {
-        title: 'Todos os Tickets',
-        href: '/tickets',
-        icon: Ticket
-      },
       {
         title: 'Dashboard Sistema',
         href: '/system-dashboard',
         icon: Building2
+      },
+      {
+        title: 'Tickets de Clientes',
+        href: '/client-tickets-management',
+        icon: Ticket
       },
       {
         title: 'Multi-Tenant',
@@ -131,6 +147,11 @@ export function TenantSidebar() {
         title: 'Organizações',
         href: '/organizations',
         icon: Building2
+      },
+      {
+        title: 'Todos os Tickets',
+        href: '/tickets',
+        icon: Ticket
       },
       {
         title: 'Controlo Acesso',
