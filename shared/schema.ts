@@ -180,6 +180,17 @@ export const userRolesRelations = relations(userRoles, ({ one }) => ({
   }),
 }));
 
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, {
+    fields: [rolePermissions.roleId],
+    references: [roles.id],
+  }),
+  permission: one(permissions, {
+    fields: [rolePermissions.permissionId],
+    references: [permissions.id],
+  }),
+}));
+
 export const sessions = pgTable(
   "sessions",
   {

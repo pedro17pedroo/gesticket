@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { tickets, users, customers, timeEntries } from '@shared/schema';
+import { tickets, users, customers, timeEntries, reportTemplates, scheduledReports } from '@shared/schema';
 import { eq, desc, count, sum, avg, gte, lte, and } from 'drizzle-orm';
 import { isAuthenticated, requirePermission } from '../middleware/auth';
+import { logger } from '../utils/logger';
+import { cache, CacheHelpers } from '../utils/cache';
 
 const router = Router();
 

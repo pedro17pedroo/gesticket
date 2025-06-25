@@ -1,6 +1,8 @@
 import { db } from '../db';
 import { users, userRoles, roles, permissions, rolePermissions, organizations } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
+import { cache, CacheHelpers, CacheInvalidation } from '../utils/cache';
+import { logger } from '../utils/logger';
 
 export class AuthService {
   static async createOrUpdateUser(userData: {
@@ -73,24 +75,17 @@ export class AuthService {
 
   static async getUserWithPermissions(userId: string) {
     try {
+      // Use cache for frequently accessed user permissions
+      const cacheKey = CacheHelpers.userPermissionsKey(userId);
+      const cached = cache.get(cacheKey);
+      if (cached) return cached;
+
       const user = await db.query.users.findFirst({
         where: eq(users.id, userId),
         with: {
           organization: true,
           department: true,
-          userRoles: {
-            with: {
-              role: {
-                with: {
-                  rolePermissions: {
-                    with: {
-                      permission: true
-                    }
-                  }
-                }
-              }
-            }
-          }
+          // Simplified query to avoid complex nested relations
         }
       });
 
