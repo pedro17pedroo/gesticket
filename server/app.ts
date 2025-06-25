@@ -10,6 +10,14 @@ export async function setupApp(app: Express): Promise<Server> {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(requestLogger);
+  
+  // Configure multer for file uploads
+  const multer = await import('multer');
+  const upload = multer.default({ 
+    dest: 'uploads/', 
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  });
+  app.use('/api/tickets', upload.array('attachments', 5)); // Max 5 files
 
   // Setup authentication
   await setupAuth(app);

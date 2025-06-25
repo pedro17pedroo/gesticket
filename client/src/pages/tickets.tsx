@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import MainLayout from "@/components/layout/main-layout";
 import TicketCard from "@/components/tickets/ticket-card";
+import EnhancedTicketForm from "@/components/tickets/enhanced-ticket-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

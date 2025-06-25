@@ -131,6 +131,10 @@ export const customers = pgTable("customers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Additional enums for enhanced ticket fields
+export const impactEnum = pgEnum("impact_level", ["low", "medium", "high", "critical"]);
+export const urgencyEnum = pgEnum("urgency_level", ["low", "medium", "high", "critical"]);
+
 // Tickets
 export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
@@ -144,6 +148,22 @@ export const tickets = pgTable("tickets", {
   assigneeId: varchar("assignee_id").references(() => users.id),
   createdById: varchar("created_by_id").references(() => users.id),
   clientResponsibleId: varchar("client_responsible_id").references(() => users.id), // Client-side responsible user
+  
+  // Enhanced fields for better ticket management
+  environment: varchar("environment", { length: 100 }), // Production, Staging, Development
+  affectedSystem: varchar("affected_system", { length: 100 }), // System/Application affected
+  location: varchar("location", { length: 100 }), // Physical or virtual location
+  contactPhone: varchar("contact_phone", { length: 20 }), // Contact phone
+  incidentDate: timestamp("incident_date"), // When the incident occurred
+  stepsToReproduce: text("steps_to_reproduce"), // Steps to reproduce the issue
+  expectedBehavior: text("expected_behavior"), // What should happen
+  actualBehavior: text("actual_behavior"), // What actually happens
+  impact: impactEnum("impact").default("medium"), // Business impact
+  urgency: urgencyEnum("urgency").default("medium"), // Time sensitivity
+  tags: text("tags"), // JSON array of tags
+  category: varchar("category", { length: 100 }), // Main category
+  subcategory: varchar("subcategory", { length: 100 }), // Subcategory
+  
   dueDate: timestamp("due_date"),
   firstResponseAt: timestamp("first_response_at"),
   resolvedAt: timestamp("resolved_at"),
