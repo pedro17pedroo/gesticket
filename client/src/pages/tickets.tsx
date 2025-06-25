@@ -22,6 +22,7 @@ export default function Tickets() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const { hasPermission } = usePermissions();
 
   // Breadcrumbs and actions for PageHeader
