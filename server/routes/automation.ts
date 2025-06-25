@@ -47,6 +47,21 @@ async function getAccessibleRules(userId: string, organizationId?: number) {
 }
 
 // Get all automation rules
+router.get('/', isAuthenticated, async (req, res) => {
+  try {
+    const organizationFilter = req.user?.isSuperUser || req.user?.canCrossOrganizations 
+      ? undefined 
+      : req.user?.organizationId;
+
+    const rules = await getAccessibleRules(req.user.id, organizationFilter);
+    res.json(rules);
+  } catch (error) {
+    logger.error('Error fetching automation rules', { error, userId: req.user?.id });
+    res.status(500).json({ message: 'Failed to fetch automation rules' });
+  }
+});
+
+// Get all automation rules (legacy endpoint)
 router.get('/rules', isAuthenticated, async (req, res) => {
   try {
     const organizationFilter = req.user?.isSuperUser || req.user?.canCrossOrganizations 

@@ -68,7 +68,7 @@ export class AuthService {
         return newUser;
       }
     } catch (error) {
-      console.error('Error creating/updating user:', error);
+      logger.error('Error creating/updating user', { error, userData });
       throw error;
     }
   }
@@ -85,7 +85,6 @@ export class AuthService {
         with: {
           organization: true,
           department: true,
-          // Simplified query to avoid complex nested relations
         }
       });
 
@@ -93,21 +92,44 @@ export class AuthService {
         return null;
       }
 
-      // Build permissions array
-      const userPermissions: string[] = [];
-      user.userRoles.forEach(userRole => {
-        userRole.role.rolePermissions.forEach(rolePermission => {
-          userPermissions.push(rolePermission.permission.name);
-        });
-      });
+      // Get user permissions through direct query for better performance
+      const userPermissions = await db
+        .select({ name: permissions.name })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .innerJoin(rolePermissions, eq(roles.id, rolePermissions.roleId))
+        .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.isActive, true)
+        ));
 
-      return {
-        ...user,
-        permissions: userPermissions,
+      const userWithPermissions = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        organizationId: user.organizationId,
+        departmentId: user.departmentId,
+        isSuperUser: user.role === 'super_admin',
+        canCrossOrganizations: user.role === 'super_admin' || user.role === 'system_admin',
+        canCrossDepartments: 
+          user.role === 'super_admin' || 
+          user.role === 'system_admin' || 
+          user.role === 'company_admin' ||
+          user.role === 'company_manager',
+        permissions: userPermissions.map(p => p.name),
+        organization: user.organization,
+        department: user.department
       };
+
+      // Cache the result for 5 minutes
+      cache.set(cacheKey, userWithPermissions, 300000);
+      return userWithPermissions;
     } catch (error) {
-      console.error('Error fetching user with permissions:', error);
-      throw error;
+      logger.error('Error fetching user with permissions', { error, userId });
+      return null;
     }
   }
 
