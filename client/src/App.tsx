@@ -44,6 +44,9 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/organizations" component={MultiTenantDashboard} />
+          <Route path="/multi-tenant-dashboard" component={MultiTenantDashboard} />
           <Route path="/tickets">
             <ProtectedRoute requiredPermissions={[{resource: 'tickets', action: 'list'}]}>
               <Tickets />
