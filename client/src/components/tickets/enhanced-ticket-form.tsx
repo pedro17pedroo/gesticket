@@ -38,6 +38,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TicketTemplates from "@/components/tickets/ticket-templates";
 import KnowledgeBase from "@/components/knowledge/knowledge-base";
+import SmartSuggestions from "@/components/ai/smart-suggestions";
 import { 
   Loader2Icon, 
   PaperclipIcon, 
@@ -216,6 +217,41 @@ export default function EnhancedTicketForm({ open, onOpenChange, ticket }: Enhan
     toast({
       title: "Template aplicado",
       description: `Template "${template.name}" foi aplicado ao formulário.`,
+    });
+  };
+
+  const handleSmartSuggestion = (suggestion: any) => {
+    switch (suggestion.type) {
+      case 'template':
+        // Find and apply the suggested template
+        const templates = [
+          { id: 'hardware-computer', priority: 'medium', type: 'incident', category: 'hardware', subcategory: 'Computador' },
+          { id: 'network-connection', priority: 'high', type: 'incident', category: 'hardware', subcategory: 'Rede' },
+          { id: 'email-issue', priority: 'medium', type: 'support', category: 'email', subcategory: 'Outlook' }
+        ];
+        const template = templates.find(t => t.id === suggestion.metadata.templateId);
+        if (template) {
+          form.setValue("priority", template.priority);
+          form.setValue("type", template.type);
+          form.setValue("category", template.category);
+          form.setValue("subcategory", template.subcategory);
+          setSelectedCategory(template.category);
+        }
+        break;
+      
+      case 'escalation_warning':
+        form.setValue("priority", suggestion.metadata.suggestedPriority);
+        form.setValue("urgency", suggestion.metadata.suggestedUrgency);
+        form.setValue("impact", "high");
+        break;
+        
+      default:
+        break;
+    }
+    
+    toast({
+      title: "Sugestão aplicada",
+      description: suggestion.description,
     });
   };
 

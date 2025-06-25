@@ -1,6 +1,7 @@
 import { useState } from "react";
 import MainLayout from "@/components/layout/main-layout";
 import TicketSentiment from "@/components/analytics/ticket-sentiment";
+import WorkflowAutomation from "@/components/automation/workflow-automation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -9,7 +10,8 @@ import {
   SmileIcon, 
   ClockIcon,
   UsersIcon,
-  TicketIcon
+  TicketIcon,
+  ZapIcon
 } from "lucide-react";
 
 export default function Analytics() {
@@ -22,7 +24,7 @@ export default function Analytics() {
         </div>
 
         <Tabs defaultValue="sentiment" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="sentiment" className="flex items-center gap-2">
               <SmileIcon className="h-4 w-4" />
               Sentimento
@@ -30,6 +32,10 @@ export default function Analytics() {
             <TabsTrigger value="performance" className="flex items-center gap-2">
               <TrendingUpIcon className="h-4 w-4" />
               Performance
+            </TabsTrigger>
+            <TabsTrigger value="automation" className="flex items-center gap-2">
+              <ZapIcon className="h-4 w-4" />
+              Automação
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <UsersIcon className="h-4 w-4" />
@@ -43,6 +49,10 @@ export default function Analytics() {
 
           <TabsContent value="sentiment" className="mt-6">
             <TicketSentiment />
+          </TabsContent>
+
+          <TabsContent value="automation" className="mt-6">
+            <WorkflowAutomation />
           </TabsContent>
 
           <TabsContent value="performance" className="mt-6">

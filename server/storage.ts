@@ -881,7 +881,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserTickets(userId: string, limit?: number): Promise<any[]> {
     try {
-      let query = this.db
+      let query = this.drizzleDb
         .select()
         .from(tickets)
         .leftJoin(customers, eq(tickets.customerId, customers.id))
@@ -910,7 +910,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserTicketStats(userId: string): Promise<any> {
     try {
-      const userTickets = await this.db
+      const userTickets = await this.drizzleDb
         .select()
         .from(tickets)
         .where(eq(tickets.createdById, userId));
