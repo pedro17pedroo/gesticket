@@ -109,12 +109,7 @@ export default function Tickets() {
                 </SelectContent>
               </Select>
               
-              {hasPermission('tickets', 'create') && (
-                <Button onClick={() => setLocation('/tickets/new')}>
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Novo Ticket
-                </Button>
-              )}
+
             </div>
         </div>
 

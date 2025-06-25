@@ -127,12 +127,7 @@ export default function TicketList({
         icon={<Ticket className="h-12 w-12" />}
         title="Nenhum ticket encontrado"
         description="Não há tickets correspondentes aos filtros aplicados."
-        action={
-          hasPermission('tickets', 'create') ? {
-            label: "Criar Ticket",
-            onClick: () => setLocation("/tickets/new")
-          } : undefined
-        }
+        action={undefined}
       />
     );
   }
