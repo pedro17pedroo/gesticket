@@ -127,38 +127,3 @@ export default function Dashboard() {
     </MainLayout>
   );
 }
-        <div className="xl:col-span-2">
-          <RecentTickets />
-        </div>
-        
-        {/* Right Sidebar */}
-        <div className="space-y-6">
-          <SlaAlerts />
-          <TimeTracker />
-          <HourBank />
-        </div>
-      </div>
-      
-      {/* Analytics Charts */}
-      <div className="mt-8">
-        <AnalyticsCharts />
-      </div>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <Button 
-          className="bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 group"
-          onClick={() => {
-            // TODO: Open new ticket modal
-            toast({
-              title: "New Ticket",
-              description: "Opening new ticket form...",
-            });
-          }}
-        >
-          <PlusIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-        </Button>
-      </div>
-    </MainLayout>
-  );
-}
