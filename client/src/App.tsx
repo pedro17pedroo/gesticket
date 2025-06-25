@@ -18,6 +18,8 @@ import SLA from "@/pages/sla";
 import TimeTracking from "@/pages/time-tracking";
 import Reports from "@/pages/reports";
 import AdvancedReports from "@/pages/advanced-reports";
+import AdvancedReportsPage from "@/pages/advanced-reports";
+import IntegrationsPage from "@/pages/integrations";
 import KnowledgeBase from "@/pages/knowledge-base";
 import Gamification from "@/pages/gamification";
 import NotFound from "@/pages/not-found";

@@ -1,12 +1,12 @@
 import React from 'react';
 import MainLayout from '@/components/layout/main-layout';
-import AdvancedReports from '@/components/reports/advanced-reports';
+import ExternalIntegrations from '@/components/integrations/external-integrations';
 
-export default function AdvancedReportsPage() {
+export default function IntegrationsPage() {
   return (
     <MainLayout>
       <div className="p-6">
-        <AdvancedReports />
+        <ExternalIntegrations />
       </div>
     </MainLayout>
   );
