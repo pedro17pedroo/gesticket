@@ -3,6 +3,8 @@ import { db } from '../db';
 import { tickets, customers, users, timeEntries } from '@shared/schema';
 import { eq, count, desc, and, gte, sql } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth';
+import { cache, CacheHelpers } from '../utils/cache';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -22,9 +24,6 @@ router.get('/stats', isAuthenticated, async (req, res) => {
       logger.request(req, res, Date.now() - startTime);
       return res.json(cachedStats);
     }
-    const organizationFilter = req.user?.isSuperUser || req.user?.canCrossOrganizations 
-      ? undefined 
-      : req.user?.organizationId;
 
     // Get ticket counts by status
     const ticketStats = await db.select({
