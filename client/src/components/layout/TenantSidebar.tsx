@@ -124,7 +124,7 @@ export function TenantSidebar() {
     }
 
     // Default fallback navigation - should show system features for super admin
-    console.log('TenantSidebar - Using fallback navigation (should be system features for super admin)');
+    // Using fallback navigation for super admin users
     
     return [
       ...baseItems,

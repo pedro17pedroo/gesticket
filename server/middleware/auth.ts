@@ -27,23 +27,14 @@ declare global {
 
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // In development, allow bypass with test user
-    if (process.env.NODE_ENV === 'development' && !req.user) {
-      // Create a test user session for development
-      req.user = {
-        id: 'admin@geckostream.com',
-        email: 'admin@geckostream.com',
-        firstName: 'Super',
-        lastName: 'Administrador',
-        role: 'super_admin',
-        organizationId: 1,
-        departmentId: 1,
-        isSuperUser: true,
-        canCrossDepartments: true,
-        canCrossOrganizations: true,
-        permissions: ['*'], // All permissions for super admin
-      };
-      return next();
+    // Development mode: Check for valid session or create test user
+    if (process.env.NODE_ENV === 'development') {
+      if (!req.user && !req.session?.user) {
+        // Only create test user if no session exists
+        const testUser = await createDevelopmentUser();
+        req.user = testUser;
+        return next();
+      }
     }
 
     // Check if user is authenticated via session

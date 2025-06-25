@@ -8,7 +8,20 @@ const router = Router();
 
 // Get dashboard statistics
 router.get('/stats', isAuthenticated, async (req, res) => {
+  const startTime = Date.now();
   try {
+    const organizationFilter = req.user?.isSuperUser || req.user?.canCrossOrganizations 
+      ? undefined 
+      : req.user?.organizationId;
+
+    // Check cache first
+    const cacheKey = CacheHelpers.dashboardStatsKey(organizationFilter);
+    const cachedStats = cache.get(cacheKey);
+    
+    if (cachedStats) {
+      logger.request(req, res, Date.now() - startTime);
+      return res.json(cachedStats);
+    }
     const organizationFilter = req.user?.isSuperUser || req.user?.canCrossOrganizations 
       ? undefined 
       : req.user?.organizationId;
