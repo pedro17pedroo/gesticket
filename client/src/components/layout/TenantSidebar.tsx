@@ -40,33 +40,12 @@ export function TenantSidebar() {
       }
     ];
 
-    // Debug user information
-    console.log('TenantSidebar - Complete user data:', {
-      user: user,
-      role: user?.role,
-      isSuperUser: user?.isSuperUser,
-      organizationType: user?.organization?.type,
-      organizationId: user?.organizationId,
-      email: user?.email
-    });
-
     // Check if user is system user (super admin, system admin, or from system organization)
     const isSystemUser = user?.role === 'super_admin' || 
                         user?.role === 'system_admin' || 
                         user?.organization?.type === 'system_owner' ||
                         user?.isSuperUser ||
-                        user?.email === 'mimopa7137@ofacer.com'; // Explicit check for super admin email
-
-    console.log('TenantSidebar - Navigation determination:', {
-      isSystemUser,
-      reasoning: {
-        roleIsSuperAdmin: user?.role === 'super_admin',
-        roleIsSystemAdmin: user?.role === 'system_admin',
-        orgTypeIsSystemOwner: user?.organization?.type === 'system_owner',
-        isSuperUserFlag: user?.isSuperUser,
-        emailMatch: user?.email === 'mimopa7137@ofacer.com'
-      }
-    });
+                        user?.email === 'mimopa7137@ofacer.com';
 
     // System owner navigation
     if (isSystemUser) {

@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { logger } from "./utils/logger";
 
 // For development, skip Replit Auth if environment variables are not available
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -92,7 +93,7 @@ export async function setupAuth(app: Express) {
 
   // Development mode - skip Replit Auth setup
   if (!hasReplitConfig) {
-    console.log("Development mode: Skipping Replit Auth setup");
+    logger.info("Development mode: Skipping Replit Auth setup");
     
     // Mock authentication for development
     app.get("/api/login", (req, res) => {

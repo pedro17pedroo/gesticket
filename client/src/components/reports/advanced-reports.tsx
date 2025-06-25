@@ -268,12 +268,12 @@ export default function AdvancedReports() {
 
   const exportReport = (format: 'pdf' | 'excel' | 'csv') => {
     // In real implementation, would call API to generate and download report
-    console.log(`Exporting report in ${format} format`);
+    // Export report functionality will be implemented here
   };
 
   const scheduleReport = () => {
     // In real implementation, would save schedule to database
-    console.log('Scheduling report');
+    // Schedule report functionality will be implemented here
   };
 
   const ReportPreview = () => {

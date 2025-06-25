@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { eq } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { isAuthenticated, requirePermission } from '../middleware/auth';
+import { automationRules } from '@shared/schema';
+import { logger } from '../utils/logger';
+import { cache, CacheHelpers, CacheInvalidation } from '../utils/cache';
 
 const router = Router();
 
@@ -25,65 +28,23 @@ interface AutomationRule {
   organizationId?: number;
 }
 
-// Mock data - in real implementation would be stored in database
-const mockRules: AutomationRule[] = [
-  {
-    id: '1',
-    name: 'Auto-atribuição por Categoria',
-    description: 'Atribui automaticamente tickets de Hardware ao técnico especializado',
-    isActive: true,
-    trigger: {
-      type: 'ticket_created',
-      conditions: {
-        category: 'Hardware'
-      }
-    },
-    actions: [
-      {
-        type: 'assign_user',
-        parameters: {
-          userId: 'admin@geckostream.com'
-        }
-      }
-    ],
-    lastTriggered: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    timesTriggered: 15,
-    createdAt: new Date('2024-01-15'),
-    organizationId: 1
-  },
-  {
-    id: '2',
-    name: 'Escalação SLA Crítico',
-    description: 'Escala tickets críticos próximos do prazo SLA para o gestor',
-    isActive: true,
-    trigger: {
-      type: 'sla_warning',
-      conditions: {
-        priority: 'critical',
-        timeRemaining: 30 // minutes
-      }
-    },
-    actions: [
-      {
-        type: 'send_email',
-        parameters: {
-          to: 'manager@geckostream.com',
-          template: 'sla_warning'
-        }
-      },
-      {
-        type: 'escalate',
-        parameters: {
-          escalateTo: 'manager'
-        }
-      }
-    ],
-    lastTriggered: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    timesTriggered: 3,
-    createdAt: new Date('2024-01-10'),
-    organizationId: 1
-  }
-];
+// Helper function to get user's accessible automation rules
+async function getAccessibleRules(userId: string, organizationId?: number) {
+  const cacheKey = `automation:rules:${organizationId || 'global'}:${userId}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  const whereCondition = organizationId 
+    ? eq(automationRules.organizationId, organizationId)
+    : undefined;
+
+  const rules = await db.select().from(automationRules)
+    .where(whereCondition)
+    .orderBy(desc(automationRules.createdAt));
+
+  cache.set(cacheKey, rules, 300000); // 5 minutes cache
+  return rules;
+}
 
 // Get all automation rules
 router.get('/rules', isAuthenticated, async (req, res) => {
@@ -92,14 +53,10 @@ router.get('/rules', isAuthenticated, async (req, res) => {
       ? undefined 
       : req.user?.organizationId;
 
-    // Filter rules by organization if not super user
-    const filteredRules = organizationFilter 
-      ? mockRules.filter(rule => rule.organizationId === organizationFilter)
-      : mockRules;
-
-    res.json(filteredRules);
+    const rules = await getAccessibleRules(req.user.id, organizationFilter);
+    res.json(rules);
   } catch (error) {
-    console.error('Error fetching automation rules:', error);
+    logger.error('Error fetching automation rules', { error, userId: req.user?.id });
     res.status(500).json({ message: 'Failed to fetch automation rules' });
   }
 });

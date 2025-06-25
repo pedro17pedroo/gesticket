@@ -24,6 +24,77 @@ export const ticketTypeEnum = pgEnum("ticket_type", ["support", "incident", "opt
 export const organizationTypeEnum = pgEnum("organization_type", ["system_owner", "client_company"]);
 
 // Session storage table (mandatory for Replit Auth)
+
+// Automation rules table for real automation functionality
+export const automationRules = pgTable("automation_rules", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  trigger: jsonb("trigger").notNull(), // stores trigger type and conditions
+  actions: jsonb("actions").notNull(), // stores array of actions
+  lastTriggered: timestamp("last_triggered"),
+  timesTriggered: integer("times_triggered").default(0),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Gamification achievements table
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 100 }),
+  category: varchar("category", { length: 50 }).notNull(), // productivity, quality, speed, collaboration
+  points: integer("points").notNull(),
+  rarity: varchar("rarity", { length: 20 }).notNull(), // common, rare, epic, legendary
+  requirements: jsonb("requirements").notNull(), // criteria to unlock
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User achievements tracking
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  achievementId: integer("achievement_id").notNull().references(() => achievements.id),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  progress: jsonb("progress"), // current progress towards achievement
+});
+
+// Report templates table
+export const reportTemplates = pgTable("report_templates", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull(),
+  parameters: jsonb("parameters").notNull(),
+  query: text("query").notNull(),
+  isActive: boolean("is_active").default(true),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Scheduled reports table
+export const scheduledReports = pgTable("scheduled_reports", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => reportTemplates.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  parameters: jsonb("parameters").notNull(),
+  schedule: jsonb("schedule").notNull(), // frequency, time, recipients
+  lastRun: timestamp("last_run"),
+  nextRun: timestamp("next_run"),
+  isActive: boolean("is_active").default(true),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Organizations table - separates system owner from client companies
 export const organizations = pgTable("organizations", {
   id: serial("id").primaryKey(),
@@ -88,7 +159,7 @@ export const rolePermissions = pgTable("role_permissions", {
 
 export const userRoles = pgTable("user_roles", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
   roleId: integer("role_id").notNull().references(() => roles.id, { onDelete: "cascade" }),
   assignedBy: varchar("assigned_by", { length: 255 }).notNull(),
   assignedAt: timestamp("assigned_at").defaultNow().notNull(),
@@ -96,6 +167,17 @@ export const userRoles = pgTable("user_roles", {
   isActive: boolean("is_active").default(true).notNull(),
 }, (table) => ({
   uniqueUserRole: unique("unique_user_role").on(table.userId, table.roleId),
+}));
+
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoles.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [userRoles.roleId],
+    references: [roles.id],
+  }),
 }));
 
 export const sessions = pgTable(

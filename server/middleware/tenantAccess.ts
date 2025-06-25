@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from '../db.js';
 import { users, organizations, departments, userRoles, roles } from '@shared/schema';
 import { eq, and, or } from 'drizzle-orm';
+import { logger } from '../utils/logger';
 
 export interface TenantUser extends Express.User {
   id: string;
@@ -75,7 +76,7 @@ export async function loadTenantInfo(req: Request, res: Response, next: NextFunc
           userWithTenant.role === 'company_manager'
       });
 
-      console.log('Tenant middleware - User enhanced:', {
+      logger.debug('Tenant middleware - User enhanced', {
         id: req.user.id,
         email: req.user.email,
         role: userWithTenant.role,
@@ -87,7 +88,7 @@ export async function loadTenantInfo(req: Request, res: Response, next: NextFunc
 
     next();
   } catch (error) {
-    console.error('Error loading tenant info:', error);
+    logger.error('Error loading tenant info', { error });
     next();
   }
 }

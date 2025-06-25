@@ -63,7 +63,7 @@ function setupWebSocket(server: Server): void {
   });
 
   wss.on("connection", (ws) => {
-    console.log("WebSocket client connected");
+    logger.info("WebSocket client connected");
     
     ws.send(JSON.stringify({
       type: "welcome",
@@ -71,11 +71,11 @@ function setupWebSocket(server: Server): void {
     }));
 
     ws.on("close", () => {
-      console.log("WebSocket client disconnected");
+      logger.info("WebSocket client disconnected");
     });
 
     ws.on("error", (error) => {
-      console.error("WebSocket error:", error);
+      logger.error("WebSocket error", { error });
     });
   });
 
