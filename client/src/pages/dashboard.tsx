@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -11,6 +12,8 @@ import SlaAlerts from "@/components/dashboard/sla-alerts";
 import TimeTracker from "@/components/dashboard/time-tracker";
 import HourBank from "@/components/dashboard/hour-bank";
 import AnalyticsCharts from "@/components/dashboard/analytics-charts";
+import ConsistentCard from "@/components/common/consistent-card";
+import ActionButton from "@/components/ui/action-button";
 import { DashboardStats, WebSocketMessage } from "@/types";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,7 @@ import { Button } from "@/components/ui/button";
 export default function Dashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { hasPermission } = usePermissions();
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   // Show user-specific dashboard for non-admin users

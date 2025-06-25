@@ -4,6 +4,10 @@ import { useLocation } from "wouter";
 import MainLayout from "@/components/layout/main-layout";
 import TicketCard from "@/components/tickets/ticket-card";
 import EnhancedTicketForm from "@/components/tickets/enhanced-ticket-form";
+import PageHeader from "@/components/common/page-header";
+import TicketStatusBadge from "@/components/tickets/ticket-status-badge";
+import TicketPriorityBadge from "@/components/tickets/ticket-priority-badge";
+import { usePermissions } from "@/hooks/usePermissions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +21,7 @@ export default function Tickets() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const { hasPermission } = usePermissions();
 
   // Fetch tickets
   const { data: tickets = [], isLoading } = useQuery<TicketWithRelations[]>({
@@ -42,6 +47,13 @@ export default function Tickets() {
       subtitle="Gerencie todos os tickets de suporte"
     >
       <div className="space-y-6">
+        <PageHeader
+          title="Tickets"
+          subtitle="Gerencie todos os tickets de suporte"
+          breadcrumbs={breadcrumbs}
+          actions={actions}
+        />
+        
         {/* Filtros */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6">
           <div className="flex flex-col lg:flex-row gap-4">
@@ -82,10 +94,12 @@ export default function Tickets() {
                 </SelectContent>
               </Select>
               
-              <Button onClick={() => setLocation('/tickets/new')}>
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Novo Ticket
-              </Button>
+              {hasPermission('tickets', 'create') && (
+                <Button onClick={() => setLocation('/tickets/new')}>
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Novo Ticket
+                </Button>
+              )}
             </div>
         </div>
 

@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/theme-context";
 import { LanguageProvider } from "@/contexts/language-context";
 import { ChatbotProvider } from "@/components/layout/chatbot-provider";
 import FloatingChatButton from "@/components/layout/floating-chat-button";
+import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -37,21 +38,81 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
-          <Route path="/tickets" component={Tickets} />
-          <Route path="/tickets/new" component={TicketFormPage} />
-          <Route path="/customers" component={Customers} />
-          <Route path="/sla" component={SLA} />
-          <Route path="/time-tracking" component={TimeTracking} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/advanced-reports" component={AdvancedReports} />
-          <Route path="/knowledge-base" component={KnowledgeBase} />
-          <Route path="/gamification" component={Gamification} />
-          <Route path="/client-portal" component={ClientPortal} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/sla-config" component={SLAConfig} />
-          <Route path="/company-management" component={CompanyManagement} />
-          <Route path="/enhanced-client-portal" component={EnhancedClientPortal} />
-          <Route path="/access-control" component={AccessControl} />
+          <Route path="/tickets">
+            <ProtectedRoute requiredPermissions={[{resource: 'tickets', action: 'list'}]}>
+              <Tickets />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/tickets/new">
+            <ProtectedRoute requiredPermissions={[{resource: 'tickets', action: 'create'}]}>
+              <TicketFormPage />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/customers">
+            <ProtectedRoute requiredPermissions={[{resource: 'customers', action: 'list'}]}>
+              <Customers />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/sla">
+            <ProtectedRoute requiredPermissions={[{resource: 'sla', action: 'view'}]}>
+              <SLA />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/time-tracking">
+            <ProtectedRoute requiredPermissions={[{resource: 'time', action: 'list'}]}>
+              <TimeTracking />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/reports">
+            <ProtectedRoute requiredPermissions={[{resource: 'reports', action: 'view'}]}>
+              <Reports />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/advanced-reports">
+            <ProtectedRoute requiredPermissions={[{resource: 'reports', action: 'advanced'}]}>
+              <AdvancedReports />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/knowledge-base">
+            <ProtectedRoute requiredPermissions={[{resource: 'knowledge', action: 'list'}]}>
+              <KnowledgeBase />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/gamification">
+            <ProtectedRoute requiredPermissions={[{resource: 'gamification', action: 'view'}]}>
+              <Gamification />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/client-portal">
+            <ProtectedRoute requiredPermissions={[{resource: 'client_portal', action: 'view'}]}>
+              <ClientPortal />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/settings">
+            <ProtectedRoute requiredPermissions={[{resource: 'settings', action: 'view'}]}>
+              <Settings />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/sla-config">
+            <ProtectedRoute requiredPermissions={[{resource: 'sla', action: 'config'}]}>
+              <SLAConfig />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/company-management">
+            <ProtectedRoute requiredPermissions={[{resource: 'companies', action: 'manage'}]}>
+              <CompanyManagement />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/enhanced-client-portal">
+            <ProtectedRoute requiredPermissions={[{resource: 'client_portal', action: 'advanced'}]}>
+              <EnhancedClientPortal />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/access-control">
+            <ProtectedRoute requiredPermissions={[{resource: 'access_control', action: 'manage'}]}>
+              <AccessControl />
+            </ProtectedRoute>
+          </Route>
         </>
       )}
       <Route component={NotFound} />

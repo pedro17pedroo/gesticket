@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./replitAuth";
 import { requestLogger, errorHandler } from "./middleware";
 import { registerRoutes } from "./routes";
+import permissionRoutes from "./routes/permissionRoutes";
 
 export async function setupApp(app: Express): Promise<Server> {
   // Basic middleware
@@ -25,6 +26,9 @@ export async function setupApp(app: Express): Promise<Server> {
 
   // Setup API routes
   await registerRoutes(app);
+  
+  // Setup permission routes
+  app.use("/api", permissionRoutes);
 
   // Legacy routes for backwards compatibility
   await setupLegacyRoutes(app);
