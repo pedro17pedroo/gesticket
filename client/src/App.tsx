@@ -27,6 +27,7 @@ import SLAConfig from "@/pages/sla-config";
 import CompanyManagement from "@/pages/company-management";
 import EnhancedClientPortal from "@/pages/enhanced-client-portal";
 import AccessControl from "@/pages/access-control";
+import MultiTenantDashboard from "@/pages/multi-tenant-dashboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -111,6 +112,11 @@ function Router() {
           <Route path="/access-control">
             <ProtectedRoute requiredPermissions={[{resource: 'access_control', action: 'manage'}]}>
               <AccessControl />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/multi-tenant-dashboard">
+            <ProtectedRoute requiredPermissions={[{resource: 'organizations', action: 'manage'}]}>
+              <MultiTenantDashboard />
             </ProtectedRoute>
           </Route>
         </>

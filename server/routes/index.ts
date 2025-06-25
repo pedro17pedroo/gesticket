@@ -10,4 +10,10 @@ router.use('/api', userRoutes);
 router.use('/api/tickets', ticketRoutes);
 router.use('/api/customers', customerRoutes);
 
+// Multi-tenant routes
+import organizationRoutes from './organizationRoutes.js';
+import departmentRoutes from './departmentRoutes.js';
+router.use('/api/organizations', organizationRoutes);
+router.use('/api/departments', departmentRoutes);
+
 export { router as default };

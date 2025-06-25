@@ -23,6 +23,10 @@ export async function setupApp(app: Express): Promise<Server> {
 
   // Setup authentication
   await setupAuth(app);
+  
+  // Load tenant information for authenticated users
+  const { loadTenantInfo } = await import('./middleware/tenantAccess.js');
+  app.use(loadTenantInfo);
 
   // Setup API routes
   await registerRoutes(app);

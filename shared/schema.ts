@@ -17,17 +17,39 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const userRoleEnum = pgEnum("user_role", ["admin", "agent", "manager", "client_manager", "client_user"]);
+export const userRoleEnum = pgEnum("user_role", ["super_admin", "system_admin", "system_agent", "company_admin", "company_manager", "company_agent", "company_user"]);
 export const ticketPriorityEnum = pgEnum("ticket_priority", ["low", "medium", "high", "critical"]);
 export const ticketStatusEnum = pgEnum("ticket_status", ["open", "in_progress", "waiting_customer", "resolved", "closed"]);
 export const ticketTypeEnum = pgEnum("ticket_type", ["support", "incident", "optimization", "feature_request"]);
+export const organizationTypeEnum = pgEnum("organization_type", ["system_owner", "client_company"]);
 
 // Session storage table (mandatory for Replit Auth)
-// New access control system tables
+// Organizations table - separates system owner from client companies
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: organizationTypeEnum("type").notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  address: text("address"),
+  website: varchar("website", { length: 255 }),
+  taxId: varchar("tax_id", { length: 50 }),
+  industry: varchar("industry", { length: 100 }),
+  tier: varchar("tier", { length: 50 }).default("basic"), // basic, standard, premium
+  parentOrgId: integer("parent_org_id").references(() => organizations.id), // For subsidiaries
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Departments now belong to organizations for proper segregation
 export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
+  parentDepartmentId: integer("parent_department_id").references(() => departments.id),
+  managerId: varchar("manager_id").references(() => users.id),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -35,13 +57,16 @@ export const departments = pgTable("departments", {
 
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 50 }).notNull(),
   description: text("description"),
+  organizationId: integer("organization_id").references(() => organizations.id), // null for system-wide roles
   isSystemRole: boolean("is_system_role").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  uniqueRolePerOrg: unique("unique_role_per_org").on(table.name, table.organizationId),
+}));
 
 export const permissions = pgTable("permissions", {
   id: serial("id").primaryKey(),
@@ -83,9 +108,29 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Companies table for client management
+// User storage table (mandatory for Replit Auth) - now with organization support
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  role: userRoleEnum("role").default("company_user"),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  departmentId: integer("department_id").references(() => departments.id),
+  managerId: varchar("manager_id").references(() => users.id),
+  isSuperUser: boolean("is_super_user").default(false).notNull(),
+  canCrossDepartments: boolean("can_cross_departments").default(false).notNull(),
+  canCrossOrganizations: boolean("can_cross_organizations").default(false).notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Companies table - now references organizations for proper multi-tenancy
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
@@ -93,24 +138,8 @@ export const companies = pgTable("companies", {
   website: varchar("website", { length: 255 }),
   taxId: varchar("tax_id", { length: 50 }),
   industry: varchar("industry", { length: 100 }),
-  tier: varchar("tier", { length: 50 }).default("basic"), // basic, standard, premium
-  managerId: varchar("manager_id").references(() => users.id), // Primary manager/representative
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// User storage table (mandatory for Replit Auth)
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  role: userRoleEnum("role").default("client_user"),
-  companyId: integer("company_id").references(() => companies.id),
+  tier: varchar("tier", { length: 50 }).default("basic"),
   managerId: varchar("manager_id").references(() => users.id),
-  departmentId: integer("department_id").references(() => departments.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -124,8 +153,9 @@ export const customers = pgTable("customers", {
   phone: varchar("phone", { length: 50 }),
   company: varchar("company", { length: 255 }),
   address: text("address"),
-  tier: varchar("tier", { length: 50 }).default("basic"), // basic, standard, premium
-  companyId: integer("company_id").references(() => companies.id), // Link to company
+  tier: varchar("tier", { length: 50 }).default("basic"),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
+  companyId: integer("company_id").references(() => companies.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -135,7 +165,7 @@ export const customers = pgTable("customers", {
 export const impactEnum = pgEnum("impact_level", ["low", "medium", "high", "critical"]);
 export const urgencyEnum = pgEnum("urgency_level", ["low", "medium", "high", "critical"]);
 
-// Tickets
+// Tickets - with organization and department segregation
 export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
@@ -143,11 +173,13 @@ export const tickets = pgTable("tickets", {
   priority: ticketPriorityEnum("priority").default("medium"),
   status: ticketStatusEnum("status").default("open"),
   type: ticketTypeEnum("type").default("support"),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
+  departmentId: integer("department_id").references(() => departments.id),
   customerId: integer("customer_id").references(() => customers.id),
   companyId: integer("company_id").references(() => companies.id),
   assigneeId: varchar("assignee_id").references(() => users.id),
   createdById: varchar("created_by_id").references(() => users.id),
-  clientResponsibleId: varchar("client_responsible_id").references(() => users.id), // Client-side responsible user
+  clientResponsibleId: varchar("client_responsible_id").references(() => users.id),
   
   // Enhanced fields for better ticket management
   environment: varchar("environment", { length: 100 }), // Production, Staging, Development
@@ -251,6 +283,7 @@ export const satisfactionRatings = pgTable("satisfaction_ratings", {
 // Hour banks for companies
 export const hourBanks = pgTable("hour_banks", {
   id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
   companyId: integer("company_id").references(() => companies.id).notNull(),
   totalHours: integer("total_hours").notNull().default(0),
   usedHours: integer("used_hours").notNull().default(0),
@@ -267,13 +300,14 @@ export const hourBanks = pgTable("hour_banks", {
 // Hour bank requests (for requesting more hours)
 export const hourBankRequests = pgTable("hour_bank_requests", {
   id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
   companyId: integer("company_id").references(() => companies.id).notNull(),
   requestedBy: varchar("requested_by").references(() => users.id).notNull(),
   requestedHours: integer("requested_hours").notNull(),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
   reason: text("reason"),
-  status: varchar("status", { length: 50 }).default("pending"), // pending, approved, rejected
+  status: varchar("status", { length: 50 }).default("pending"),
   approvedBy: varchar("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
   notes: text("notes"),
@@ -284,6 +318,7 @@ export const hourBankRequests = pgTable("hour_bank_requests", {
 // Hour bank usage tracking
 export const hourBankUsage = pgTable("hour_bank_usage", {
   id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
   companyId: integer("company_id").references(() => companies.id).notNull(),
   ticketId: integer("ticket_id").references(() => tickets.id),
   timeEntryId: integer("time_entry_id").references(() => timeEntries.id),
@@ -296,10 +331,51 @@ export const hourBankUsage = pgTable("hour_bank_usage", {
 });
 
 // Relations
+export const organizationsRelations = relations(organizations, ({ one, many }) => ({
+  parentOrganization: one(organizations, {
+    fields: [organizations.parentOrgId],
+    references: [organizations.id],
+    relationName: "parentOrg"
+  }),
+  subsidiaries: many(organizations, { relationName: "parentOrg" }),
+  departments: many(departments),
+  users: many(users),
+  companies: many(companies),
+  tickets: many(tickets),
+  customers: many(customers),
+  hourBanks: many(hourBanks),
+  hourBankRequests: many(hourBankRequests),
+  hourBankUsage: many(hourBankUsage),
+  roles: many(roles),
+}));
+
+export const departmentsRelations = relations(departments, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [departments.organizationId],
+    references: [organizations.id],
+  }),
+  parentDepartment: one(departments, {
+    fields: [departments.parentDepartmentId],
+    references: [departments.id],
+    relationName: "parentDept"
+  }),
+  subDepartments: many(departments, { relationName: "parentDept" }),
+  manager: one(users, {
+    fields: [departments.managerId],
+    references: [users.id],
+  }),
+  users: many(users),
+  tickets: many(tickets),
+}));
+
 export const usersRelations = relations(users, ({ one, many }) => ({
-  company: one(companies, {
-    fields: [users.companyId],
-    references: [companies.id],
+  organization: one(organizations, {
+    fields: [users.organizationId],
+    references: [organizations.id],
+  }),
+  department: one(departments, {
+    fields: [users.departmentId],
+    references: [departments.id],
   }),
   manager: one(users, {
     fields: [users.managerId],
@@ -307,7 +383,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     relationName: "userManager"
   }),
   managedUsers: many(users, { relationName: "userManager" }),
-  managedCompanies: many(companies, { relationName: "companyManager" }),
+  managedDepartments: many(departments),
+  managedCompanies: many(companies),
   createdTickets: many(tickets, { relationName: "createdBy" }),
   assignedTickets: many(tickets, { relationName: "assignee" }),
   responsibleTickets: many(tickets, { relationName: "clientResponsible" }),
@@ -315,15 +392,28 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   knowledgeArticles: many(knowledgeArticles),
   ticketComments: many(ticketComments),
   hourBankRequests: many(hourBankRequests),
+  userRoles: many(userRoles),
+}));
+
+export const rolesRelations = relations(roles, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [roles.organizationId],
+    references: [organizations.id],
+  }),
+  rolePermissions: many(rolePermissions),
+  userRoles: many(userRoles),
 }));
 
 export const companiesRelations = relations(companies, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [companies.organizationId],
+    references: [organizations.id],
+  }),
   manager: one(users, {
     fields: [companies.managerId],
     references: [users.id],
     relationName: "companyManager"
   }),
-  users: many(users),
   customers: many(customers),
   tickets: many(tickets),
   hourBanks: many(hourBanks),
@@ -332,6 +422,10 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
 }));
 
 export const customersRelations = relations(customers, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [customers.organizationId],
+    references: [organizations.id],
+  }),
   company: one(companies, {
     fields: [customers.companyId],
     references: [companies.id],
@@ -340,6 +434,14 @@ export const customersRelations = relations(customers, ({ one, many }) => ({
 }));
 
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [tickets.organizationId],
+    references: [organizations.id],
+  }),
+  department: one(departments, {
+    fields: [tickets.departmentId],
+    references: [departments.id],
+  }),
   customer: one(customers, {
     fields: [tickets.customerId],
     references: [customers.id],
@@ -422,6 +524,10 @@ export const satisfactionRatingsRelations = relations(satisfactionRatings, ({ on
 }));
 
 export const hourBanksRelations = relations(hourBanks, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [hourBanks.organizationId],
+    references: [organizations.id],
+  }),
   company: one(companies, {
     fields: [hourBanks.companyId],
     references: [companies.id],
@@ -430,6 +536,10 @@ export const hourBanksRelations = relations(hourBanks, ({ one, many }) => ({
 }));
 
 export const hourBankRequestsRelations = relations(hourBankRequests, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [hourBankRequests.organizationId],
+    references: [organizations.id],
+  }),
   company: one(companies, {
     fields: [hourBankRequests.companyId],
     references: [companies.id],
@@ -447,6 +557,10 @@ export const hourBankRequestsRelations = relations(hourBankRequests, ({ one }) =
 }));
 
 export const hourBankUsageRelations = relations(hourBankUsage, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [hourBankUsage.organizationId],
+    references: [organizations.id],
+  }),
   company: one(companies, {
     fields: [hourBankUsage.companyId],
     references: [companies.id],
@@ -523,7 +637,13 @@ export const insertSatisfactionRatingSchema = createInsertSchema(satisfactionRat
   updatedAt: true,
 });
 
-// New schemas for access control
+// New schemas for multi-tenant access control
+export const insertOrganizationSchema = createInsertSchema(organizations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertDepartmentSchema = createInsertSchema(departments).omit({
   id: true,
   createdAt: true,
@@ -577,7 +697,9 @@ export type SatisfactionRating = typeof satisfactionRatings.$inferSelect;
 export type InsertSatisfactionRating = z.infer<typeof insertSatisfactionRatingSchema>;
 export type SlaConfig = typeof slaConfigs.$inferSelect;
 
-// New types for access control
+// New types for multi-tenant architecture
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = typeof organizations.$inferInsert;
 export type Department = typeof departments.$inferSelect;
 export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
 export type Role = typeof roles.$inferSelect;
@@ -589,8 +711,31 @@ export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 export type UserRole = typeof userRoles.$inferSelect;
 export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
 
-// Complex types with relations
+// Complex types with relations for multi-tenant architecture
+export type OrganizationWithRelations = Organization & {
+  parentOrganization?: Organization;
+  subsidiaries?: Organization[];
+  departments?: Department[];
+  users?: User[];
+  companies?: Company[];
+  tickets?: Ticket[];
+  customers?: Customer[];
+  hourBanks?: HourBank[];
+  roles?: Role[];
+};
+
+export type DepartmentWithRelations = Department & {
+  organization?: Organization;
+  parentDepartment?: Department;
+  subDepartments?: Department[];
+  manager?: User;
+  users?: User[];
+  tickets?: Ticket[];
+};
+
 export type TicketWithRelations = Ticket & {
+  organization?: Organization;
+  department?: Department;
   customer?: Customer;
   company?: Company;
   assignee?: User;
@@ -602,25 +747,23 @@ export type TicketWithRelations = Ticket & {
 };
 
 export type CompanyWithRelations = Company & {
+  organization?: Organization;
   manager?: User;
-  users?: User[];
   customers?: Customer[];
   hourBanks?: HourBank[];
   hourBankRequests?: HourBankRequest[];
 };
 
 export type UserWithRelations = User & {
-  company?: Company;
-  manager?: User;
+  organization?: Organization;
   department?: Department;
+  manager?: User;
   managedUsers?: User[];
+  managedDepartments?: Department[];
   userRoles?: (UserRole & { role: Role })[];
 };
 
 export type RoleWithPermissions = Role & {
+  organization?: Organization;
   rolePermissions?: (RolePermission & { permission: Permission })[];
-};
-
-export type DepartmentWithUsers = Department & {
-  users?: User[];
 };
