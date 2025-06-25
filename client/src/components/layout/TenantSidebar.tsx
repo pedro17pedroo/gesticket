@@ -45,6 +45,12 @@ export function TenantSidebar() {
       return [
         ...baseItems,
         {
+          title: 'Dashboard Sistema',
+          href: '/system-dashboard',
+          icon: Building2,
+          requiredRoles: ['super_admin', 'system_admin']
+        },
+        {
           title: 'Multi-Tenant',
           href: '/multi-tenant-dashboard',
           icon: Building2,
@@ -55,6 +61,12 @@ export function TenantSidebar() {
           href: '/organizations',
           icon: Building2,
           requiredRoles: ['super_admin', 'system_admin']
+        },
+        {
+          title: 'Gestão Tickets Clientes',
+          href: '/client-tickets-management',
+          icon: Ticket,
+          requiredRoles: ['super_admin', 'system_admin', 'system_agent']
         },
         {
           title: 'Todos os Tickets',

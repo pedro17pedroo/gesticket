@@ -1,7 +1,10 @@
 import type { Request, Response } from "express";
 import { BaseController } from "./BaseController";
 import { TicketService } from "../services/TicketService";
-import { insertTicketSchema } from "@shared/schema";
+import { insertTicketSchema, tickets, organizations, departments } from "@shared/schema";
+import { db } from '../db.js';
+import { eq, and, or, desc, inArray } from 'drizzle-orm';
+import { TenantUser, getAccessibleOrganizations, getAccessibleDepartments } from '../middleware/tenantAccess.js';
 
 export class TicketController extends BaseController {
   private ticketService: TicketService;
@@ -13,16 +16,96 @@ export class TicketController extends BaseController {
 
   async getTickets(req: Request, res: Response): Promise<void> {
     await this.handleRequest(req, res, async () => {
-      const user = this.getAuthenticatedUser(req);
-      const filters = {
-        status: req.query.status as string,
-        priority: req.query.priority as string,
-        customerId: req.query.customerId ? parseInt(req.query.customerId as string) : undefined,
-        limit: parseInt(req.query.limit as string) || 50,
-        offset: parseInt(req.query.offset as string) || 0,
-      };
+      const user = req.user as TenantUser;
+      if (!user) {
+        throw new Error('User authentication required');
+      }
 
-      return await this.ticketService.getTickets(filters, user);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = (page - 1) * limit;
+      
+      const status = req.query.status as string;
+      const priority = req.query.priority as string;
+      const organizationId = req.query.organizationId ? parseInt(req.query.organizationId as string) : undefined;
+      const departmentId = req.query.departmentId ? parseInt(req.query.departmentId as string) : undefined;
+
+      // Build tenant-aware conditions
+      const conditions: any[] = [];
+      
+      // Apply tenant access control
+      if (user.isSuperUser || user.canCrossOrganizations) {
+        // Super users can see all tickets or filter by organization
+        if (organizationId) {
+          conditions.push(eq(tickets.organizationId, organizationId));
+        }
+      } else if (user.canCrossDepartments && user.organizationId) {
+        // Cross-department users see all tickets in their organization
+        conditions.push(eq(tickets.organizationId, user.organizationId));
+        if (departmentId) {
+          conditions.push(eq(tickets.departmentId, departmentId));
+        }
+      } else if (user.departmentId) {
+        // Regular users see only tickets in their department
+        conditions.push(eq(tickets.departmentId, user.departmentId));
+      } else {
+        // Users without department can only see tickets they created or are assigned to
+        conditions.push(
+          or(
+            eq(tickets.createdById, user.id),
+            eq(tickets.assigneeId, user.id),
+            eq(tickets.clientResponsibleId, user.id)
+          )
+        );
+      }
+      
+      if (status) conditions.push(eq(tickets.status, status as any));
+      if (priority) conditions.push(eq(tickets.priority, priority as any));
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      const ticketList = await db.query.tickets.findMany({
+        where: whereClause,
+        limit,
+        offset,
+        orderBy: [desc(tickets.createdAt)],
+        with: {
+          organization: {
+            columns: { id: true, name: true, type: true }
+          },
+          department: {
+            columns: { id: true, name: true }
+          },
+          customer: true,
+          company: true,
+          assignee: {
+            columns: { id: true, firstName: true, lastName: true, email: true }
+          },
+          createdBy: {
+            columns: { id: true, firstName: true, lastName: true, email: true }
+          },
+          clientResponsible: {
+            columns: { id: true, firstName: true, lastName: true, email: true }
+          },
+          timeEntries: true
+        }
+      });
+
+      // Get total count
+      const totalCount = await db.$count(tickets, whereClause);
+      const totalPages = Math.ceil(totalCount / limit);
+
+      return {
+        tickets: ticketList,
+        pagination: {
+          page,
+          limit,
+          totalPages,
+          totalCount,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      };
     });
   }
 

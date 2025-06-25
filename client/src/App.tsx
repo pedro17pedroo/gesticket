@@ -28,6 +28,9 @@ import CompanyManagement from "@/pages/company-management";
 import EnhancedClientPortal from "@/pages/enhanced-client-portal";
 import AccessControl from "@/pages/access-control";
 import MultiTenantDashboard from "@/pages/multi-tenant-dashboard";
+import SystemDashboard from "@/pages/system-dashboard";
+import ClientOrganizationDetail from "@/pages/client-organization-detail";
+import ClientTicketsManagement from "@/pages/client-tickets-management";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -117,6 +120,21 @@ function Router() {
           <Route path="/multi-tenant-dashboard">
             <ProtectedRoute requiredPermissions={[{resource: 'organizations', action: 'manage'}]}>
               <MultiTenantDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/system-dashboard">
+            <ProtectedRoute requiredPermissions={[{resource: 'system', action: 'manage'}]}>
+              <SystemDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/client-organizations/:id">
+            <ProtectedRoute requiredPermissions={[{resource: 'client_management', action: 'manage'}]}>
+              <ClientOrganizationDetail />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/client-tickets-management">
+            <ProtectedRoute requiredPermissions={[{resource: 'client_management', action: 'manage'}]}>
+              <ClientTicketsManagement />
             </ProtectedRoute>
           </Route>
         </>

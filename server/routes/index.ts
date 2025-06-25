@@ -13,7 +13,11 @@ router.use('/api/customers', customerRoutes);
 // Multi-tenant routes
 import organizationRoutes from './organizationRoutes.js';
 import departmentRoutes from './departmentRoutes.js';
+import clientManagementRoutes from './clientManagementRoutes.js';
+import tenantTicketRoutes from './tenantTicketRoutes.js';
 router.use('/api/organizations', organizationRoutes);
 router.use('/api/departments', departmentRoutes);
+router.use('/api/client-management', clientManagementRoutes);
+router.use('/api/tenant-tickets', tenantTicketRoutes);
 
 export { router as default };

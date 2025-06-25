@@ -4,3 +4,4 @@ export { UserController } from "./UserController";
 export { CustomerController } from "./CustomerController";
 export { OrganizationController } from "./OrganizationController";
 export { DepartmentController } from "./DepartmentController";
+export { ClientManagementController } from "./ClientManagementController";
