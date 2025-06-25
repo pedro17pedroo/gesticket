@@ -24,6 +24,19 @@ export default function Tickets() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const { hasPermission } = usePermissions();
 
+  // Breadcrumbs and actions for PageHeader
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/" },
+    { label: "Tickets" }
+  ];
+
+  const actions = hasPermission('tickets', 'create') ? (
+    <Button onClick={() => setLocation('/tickets/new')}>
+      <PlusIcon className="w-4 h-4 mr-2" />
+      Novo Ticket
+    </Button>
+  ) : null;
+
   // Fetch tickets
   const { data: tickets = [], isLoading } = useQuery<TicketWithRelations[]>({
     queryKey: ['/api/tickets', { status: statusFilter !== 'all' ? statusFilter : undefined, priority: priorityFilter !== 'all' ? priorityFilter : undefined }],

@@ -60,10 +60,7 @@ export default function Sidebar() {
     !item.requiredPermissions || hasAnyPermission(item.requiredPermissions)
   );
 
-  // Debug: Log permissions for troubleshooting
-  console.log('User permissions:', permissions);
-  console.log('Filtered navigation items:', filteredNavigation.length);
-  console.log('Filtered integration items:', filteredIntegrations.length);
+
 
   return (
     <aside className="h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-200 dark:border-gray-700 flex flex-col">
